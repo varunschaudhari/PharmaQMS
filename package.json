@@ -1,0 +1,32 @@
+{
+  "name": "pharmaqms",
+  "private": true,
+  "version": "0.0.1",
+  "description": "PharmaQMS - 21 CFR Part 11-capable pharma eQMS SaaS",
+  "workspaces": [
+    "server",
+    "client",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "test": "npm run build -w @pharmaqms/shared && npm run test --workspace=server --workspace=client",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^7.18.0",
+    "@typescript-eslint/parser": "^7.18.0",
+    "concurrently": "^8.2.2",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-react": "^7.35.0",
+    "eslint-plugin-react-hooks": "^4.6.2",
+    "eslint-plugin-react-refresh": "^0.4.9",
+    "prettier": "^3.3.3",
+    "typescript": "^5.5.4"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

@@ -1,0 +1,13 @@
+// Stable, machine-readable error codes. The global exception filter shapes every
+// error response as { error: { code, message } } — never a raw stack trace.
+export enum ErrorCode {
+  VALIDATION_ERROR = 'VALIDATION_ERROR',
+  UNAUTHENTICATED = 'UNAUTHENTICATED',
+  PERMISSION_DENIED = 'PERMISSION_DENIED',
+  AUTH_INVALID_CREDENTIALS = 'AUTH_INVALID_CREDENTIALS',
+  AUTH_ACCOUNT_LOCKED = 'AUTH_ACCOUNT_LOCKED',
+  AUTH_ACCOUNT_INACTIVE = 'AUTH_ACCOUNT_INACTIVE',
+  AUTH_INVALID_REFRESH_TOKEN = 'AUTH_INVALID_REFRESH_TOKEN',
+  NOT_FOUND = 'NOT_FOUND',
+  INTERNAL_ERROR = 'INTERNAL_ERROR',
+}

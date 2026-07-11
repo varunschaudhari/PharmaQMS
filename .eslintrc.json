@@ -1,0 +1,47 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "sourceType": "module",
+    "ecmaVersion": 2022,
+    "ecmaFeatures": { "jsx": true }
+  },
+  "plugins": ["@typescript-eslint", "import"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript",
+    "prettier"
+  ],
+  "env": {
+    "es2022": true,
+    "node": true
+  },
+  "ignorePatterns": ["dist", "build", "node_modules", "coverage", "*.config.js", "*.config.ts"],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "error",
+    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "import/no-unresolved": "off"
+  },
+  "overrides": [
+    {
+      "files": ["client/**/*.{ts,tsx}"],
+      "plugins": ["react", "react-hooks", "react-refresh"],
+      "extends": [
+        "plugin:react/recommended",
+        "plugin:react-hooks/recommended"
+      ],
+      "env": { "browser": true, "node": false },
+      "settings": { "react": { "version": "18.3" } },
+      "rules": {
+        "react/react-in-jsx-scope": "off",
+        "react-refresh/only-export-components": ["warn", { "allowConstantExport": true }]
+      }
+    },
+    {
+      "files": ["**/*.spec.ts", "**/*.test.ts", "**/*.test.tsx", "**/*.e2e-spec.ts"],
+      "env": { "jest": true }
+    }
+  ]
+}
