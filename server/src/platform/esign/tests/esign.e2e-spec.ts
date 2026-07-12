@@ -165,4 +165,26 @@ describe('PLT-3 E-Signature HTTP surface', () => {
     expect(response.status).toBe(HttpStatus.BAD_REQUEST);
     expect(response.body.error.code).toBe('VALIDATION_ERROR');
   });
+
+  it('Iron Rule 5: an outsider tenant cannot read this tenant\'s signatures for the same entityType/entityId', async () => {
+    const roleModel = app.get<Model<RoleDocument>>(getModelToken(Role.name));
+    const userModel = app.get<Model<UserDocument>>(getModelToken(User.name));
+    const outsiderTenantId = new mongoose.Types.ObjectId().toString();
+    const outsiderRole = await roleModel.create({ tenantId: outsiderTenantId, name: 'QA Head', permissions: ['documents:approve'] });
+    const passwordHash = await bcrypt.hash('Correct1!', 10);
+    await userModel.create({ tenantId: outsiderTenantId, email: 'outsider@else.example', fullName: 'Outsider', passwordHash, roleId: outsiderRole._id });
+    const outsiderLogin = await request(app.getHttpServer())
+      .post('/api/v1/auth/login')
+      .send({ tenantId: outsiderTenantId, email: 'outsider@else.example', password: 'Correct1!' });
+    const outsiderToken = outsiderLogin.body.data.tokens.accessToken as string;
+
+    // 'doc-42' was signed by tenantId (this file's own tenant) in the test above — same
+    // entityType/entityId, deliberately, to prove the outsider's query is scoped by their own
+    // tenantId (from the JWT) and not by the entityId string alone.
+    const response = await request(app.getHttpServer())
+      .get('/api/v1/esign/Document/doc-42/signatures')
+      .set('Authorization', `Bearer ${outsiderToken}`);
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.body.data).toEqual([]);
+  });
 });

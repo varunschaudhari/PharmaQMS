@@ -39,6 +39,11 @@ export class WorkflowInstance {
   // generally) may act on the current step. Cleared whenever the step changes.
   @Prop({ type: String, default: null })
   overrideAssigneeUserId!: string | null;
+
+  // PLT-6: the author who (last) submitted this instance — the recipient of approved/rejected
+  // outcome notifications. Set on every submit.
+  @Prop({ type: String, default: null })
+  submittedByUserId!: string | null;
 }
 
 export const WorkflowInstanceSchema = SchemaFactory.createForClass(WorkflowInstance);

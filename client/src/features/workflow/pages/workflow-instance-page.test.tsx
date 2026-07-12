@@ -15,6 +15,10 @@ const { challengeSignature } = vi.hoisted(() => ({
   challengeSignature: vi.fn(),
 }));
 
+const { fetchAuditHistory } = vi.hoisted(() => ({
+  fetchAuditHistory: vi.fn().mockResolvedValue({ data: [], meta: { page: 1, limit: 20, total: 0 } }),
+}));
+
 vi.mock('../../../lib/workflow-api', () => ({
   fetchWorkflowInstance,
   actOnWorkflowStep,
@@ -22,6 +26,12 @@ vi.mock('../../../lib/workflow-api', () => ({
 
 vi.mock('../../../lib/esign-api', () => ({
   challengeSignature,
+}));
+
+vi.mock('../../../lib/audit-api', () => ({
+  fetchAuditHistory,
+  downloadAuditRecordExport: vi.fn(),
+  downloadAuditModuleExport: vi.fn(),
 }));
 
 function baseInstance() {
@@ -104,5 +114,14 @@ describe('PLT-4 WorkflowInstancePage', () => {
         comment: 'Missing signature page.',
       }),
     );
+  });
+
+  it('PLT-2: includes the HistoryTab for the underlying entity (audited against entityType/entityId, not the instance id)', async () => {
+    fetchWorkflowInstance.mockResolvedValue(baseInstance());
+
+    renderPage();
+
+    await waitFor(() => expect(screen.getByText('Step 1 of 2: Dept Head Review')).toBeInTheDocument());
+    await waitFor(() => expect(fetchAuditHistory).toHaveBeenCalledWith('dummy-record', 'DR-0001', 1, 20));
   });
 });

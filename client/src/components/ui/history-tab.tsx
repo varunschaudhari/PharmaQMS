@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { useState } from 'react';
 import { fetchAuditHistory } from '../../lib/audit-api';
+import { ExportAuditButton } from './export-audit-button';
 
 export interface HistoryTabProps {
   entityType: string;
@@ -31,7 +32,10 @@ export function HistoryTab({ entityType, entityId, pageSize = 20 }: HistoryTabPr
 
   return (
     <div className="space-y-3">
-      <h2 className="text-sm font-semibold text-slate-900">History</h2>
+      <div className="flex items-center justify-between">
+        <h2 className="text-sm font-semibold text-slate-900">History</h2>
+        <ExportAuditButton entityType={entityType} entityId={entityId} />
+      </div>
 
       {events.length === 0 ? (
         <p className="text-sm text-slate-500">No history yet.</p>

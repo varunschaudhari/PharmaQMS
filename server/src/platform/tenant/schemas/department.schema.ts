@@ -17,6 +17,10 @@ export class Department {
   @Prop({ required: true, trim: true, uppercase: true })
   code!: string;
 
+  // TRN-5: overdue-training notifications go to the employee AND their department head.
+  @Prop({ type: String, default: null })
+  headUserId!: string | null;
+
   @Prop({ default: true })
   isActive!: boolean;
 }

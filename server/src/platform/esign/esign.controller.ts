@@ -52,6 +52,10 @@ export class EsignController {
     return { data };
   }
 
+  // No extra @RequirePermission() beyond authentication (already enforced globally) — same
+  // rationale as AuditController's history endpoint: a caller can only have an entityId to ask
+  // about if they reached it through that module's own view-gated endpoint in the first place,
+  // and the tenant-scoped query never returns another tenant's signatures for the same entityId.
   @Get(':entityType/:entityId/signatures')
   async listSignatures(
     @CurrentTenant() tenantId: string,

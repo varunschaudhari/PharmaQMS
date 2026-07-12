@@ -309,11 +309,40 @@ describe('PLT-4 Workflow HTTP surface', () => {
       return response.body.data.tokens.accessToken as string;
     })();
 
-    // The other tenant has no workflow template configured for 'Document' at all.
+    // The other tenant has no workflow template configured for 'Document' at all — submitting a
+    // NEW instance under the same entityId is blocked at the template lookup.
     const submitResponse = await request(app.getHttpServer())
       .post('/api/v1/workflow/instances/submit')
       .set('Authorization', `Bearer ${otherToken}`)
       .send({ entityType: 'Document', entityId: 'doc-http-1' });
     expect(submitResponse.status).toBe(HttpStatus.NOT_FOUND);
+
+    // Stronger check: the outsider must also be blocked from the PRIMARY tenant's real,
+    // already-existing instance by id — not merely unable to create a new one for lack of a
+    // template. GET and act (with a well-formed body, so it reaches the tenant check rather than
+    // failing DTO validation first) must both 404, proving instanceModel lookups are tenant-scoped.
+    const submitOwn = await request(app.getHttpServer())
+      .post('/api/v1/workflow/instances/submit')
+      .set('Authorization', `Bearer ${deptHeadToken}`)
+      .send({ entityType: 'Document', entityId: 'doc-http-5' });
+    const primaryInstanceId = submitOwn.body.data.id;
+
+    const getForeign = await request(app.getHttpServer())
+      .get(`/api/v1/workflow/instances/${primaryInstanceId}`)
+      .set('Authorization', `Bearer ${otherToken}`);
+    expect(getForeign.status).toBe(HttpStatus.NOT_FOUND);
+
+    const actForeign = await request(app.getHttpServer())
+      .post(`/api/v1/workflow/instances/${primaryInstanceId}/act`)
+      .set('Authorization', `Bearer ${otherToken}`)
+      .send({ action: 'approve', signingToken: 'irrelevant', entitySnapshot: {} });
+    expect(actForeign.status).toBe(HttpStatus.NOT_FOUND);
+
+    // The primary tenant's own view of the same instance is unaffected by the foreign attempts.
+    const getOwn = await request(app.getHttpServer())
+      .get(`/api/v1/workflow/instances/${primaryInstanceId}`)
+      .set('Authorization', `Bearer ${adminToken}`);
+    expect(getOwn.status).toBe(HttpStatus.OK);
+    expect(getOwn.body.data.status).toBe('in_progress');
   });
 });

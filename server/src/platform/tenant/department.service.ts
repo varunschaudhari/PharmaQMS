@@ -13,6 +13,7 @@ export interface CreateDepartmentInput {
 
 export interface UpdateDepartmentInput {
   name?: string;
+  headUserId?: string | null;
   isActive?: boolean;
 }
 
@@ -42,9 +43,10 @@ export class DepartmentService {
     if (!department) {
       throw new AppException(ErrorCode.NOT_FOUND, 'Department not found.', HttpStatus.NOT_FOUND);
     }
-    const before = { name: department.name, isActive: department.isActive };
+    const before = { name: department.name, headUserId: department.headUserId, isActive: department.isActive };
 
     if (input.name !== undefined) department.name = input.name;
+    if (input.headUserId !== undefined) department.headUserId = input.headUserId;
     // Iron Rule 3: no hard delete — "removing" a department is deactivation via isActive.
     if (input.isActive !== undefined) department.isActive = input.isActive;
     await department.save();
@@ -63,6 +65,7 @@ function toDepartmentData(doc: {
   tenantId: unknown;
   name: string;
   code: string;
+  headUserId: string | null;
   isActive: boolean;
 }): DepartmentData {
   return {
@@ -70,6 +73,7 @@ function toDepartmentData(doc: {
     tenantId: String(doc.tenantId),
     name: doc.name,
     code: doc.code,
+    headUserId: doc.headUserId ?? null,
     isActive: doc.isActive,
   };
 }

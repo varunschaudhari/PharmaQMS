@@ -1,4 +1,5 @@
 import { ConfigModule } from '@nestjs/config';
+import { EventEmitterModule } from '@nestjs/event-emitter';
 import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import bcrypt from 'bcryptjs';
@@ -24,6 +25,7 @@ describe('PLT-8 UserAdminService', () => {
     moduleRef = await Test.createTestingModule({
       imports: [
         ConfigModule.forRoot({ isGlobal: true, load: [authConfig] }),
+        EventEmitterModule.forRoot(),
         MongooseModule.forRoot(mongod.getUri()),
         MongooseModule.forFeature([
           { name: User.name, schema: UserSchema },

@@ -69,6 +69,14 @@ describe('PLT-4 WorkflowService', () => {
     return new mongoose.Types.ObjectId().toString();
   }
 
+  // PLT-6: submit() now records who submitted (submittedByUserId) — it only stamps the id, so a
+  // synthetic author actor is enough for tests that don't assert on notifications.
+  const author: WorkflowActor = {
+    userId: new mongoose.Types.ObjectId().toString(),
+    fullName: 'Doc Author',
+    roleId: new mongoose.Types.ObjectId().toString(),
+  };
+
   async function seedActor(tenant: string, roleName: string): Promise<{ actor: WorkflowActor; password: string }> {
     const role = await roleModel.create({ tenantId: tenant, name: roleName, permissions: [] });
     const password = 'Correct1!';
@@ -122,7 +130,7 @@ describe('PLT-4 WorkflowService', () => {
     const tenant = tenantId();
     const { deptHead, qaHead } = await seedTwoStepTemplate(tenant);
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-1');
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-1', author);
     expect(submitted.before).toBeNull();
     expect(submitted.after.status).toBe(WorkflowInstanceStatus.IN_PROGRESS);
     expect(submitted.after.currentStepIndex).toBe(0);
@@ -159,7 +167,7 @@ describe('PLT-4 WorkflowService', () => {
     await seedTwoStepTemplate(tenant);
     const outsider = await seedActor(tenant, 'Outsider');
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-2');
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-2', author);
     const outsiderToken = await signingTokenFor(tenant, outsider.actor, outsider.password);
 
     await expect(
@@ -175,7 +183,7 @@ describe('PLT-4 WorkflowService', () => {
     const tenant = tenantId();
     const { deptHead } = await seedTwoStepTemplate(tenant);
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-3');
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-3', author);
     const result = await workflowService.actOnStep(tenant, submitted.after.id, deptHead.actor, {
       action: WorkflowAction.REJECT,
       comment: 'Needs more detail before review.',
@@ -191,7 +199,7 @@ describe('PLT-4 WorkflowService', () => {
     const tenant = tenantId();
     const { deptHead, qaHead } = await seedTwoStepTemplate(tenant);
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-4');
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-4', author);
     const deptHeadToken = await signingTokenFor(tenant, deptHead.actor, deptHead.password);
     await workflowService.actOnStep(tenant, submitted.after.id, deptHead.actor, {
       action: WorkflowAction.APPROVE,
@@ -213,7 +221,7 @@ describe('PLT-4 WorkflowService', () => {
     const { deptHead } = await seedTwoStepTemplate(tenant);
     const substitute = await seedActor(tenant, 'Substitute Reviewer');
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-5');
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-5', author);
     const reassignment = await workflowService.actOnStep(tenant, submitted.after.id, deptHead.actor, {
       action: WorkflowAction.REASSIGN,
       userId: substitute.actor.userId,
@@ -248,8 +256,8 @@ describe('PLT-4 WorkflowService', () => {
     const tenant = tenantId();
     const { deptHead, qaHead } = await seedTwoStepTemplate(tenant);
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-6');
-    await expect(workflowService.submit(tenant, 'Document', 'doc-6')).rejects.toThrow(/Invalid workflow transition/);
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-6', author);
+    await expect(workflowService.submit(tenant, 'Document', 'doc-6', author)).rejects.toThrow(/Invalid workflow transition/);
 
     const deptHeadToken = await signingTokenFor(tenant, deptHead.actor, deptHead.password);
     await workflowService.actOnStep(tenant, submitted.after.id, deptHead.actor, {
@@ -280,8 +288,8 @@ describe('PLT-4 WorkflowService', () => {
     await seedTwoStepTemplate(tenantA);
     await seedTwoStepTemplate(tenantB);
 
-    const instanceA = await workflowService.submit(tenantA, 'Document', 'shared-entity-id');
-    const instanceB = await workflowService.submit(tenantB, 'Document', 'shared-entity-id');
+    const instanceA = await workflowService.submit(tenantA, 'Document', 'shared-entity-id', author);
+    const instanceB = await workflowService.submit(tenantB, 'Document', 'shared-entity-id', author);
 
     expect(instanceA.after.id).not.toBe(instanceB.after.id);
     expect(instanceA.after.tenantId).toBe(tenantA);
@@ -292,7 +300,7 @@ describe('PLT-4 WorkflowService', () => {
     const tenant = tenantId();
     const { deptHead, qaHead } = await seedTwoStepTemplate(tenant);
 
-    const submitted = await workflowService.submit(tenant, 'Document', 'doc-pending-1');
+    const submitted = await workflowService.submit(tenant, 'Document', 'doc-pending-1', author);
     const deptHeadTasks = await workflowService.myPendingTasks(tenant, deptHead.actor);
     expect(deptHeadTasks.some((task) => task.id === submitted.after.id)).toBe(true);
 

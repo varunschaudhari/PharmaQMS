@@ -1,8 +1,11 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import type { ReactElement } from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { HistoryTab } from './history-tab';
+
+const { downloadAuditRecordExport } = vi.hoisted(() => ({ downloadAuditRecordExport: vi.fn() }));
 
 vi.mock('../../lib/audit-api', () => ({
   fetchAuditHistory: vi.fn().mockResolvedValue({
@@ -22,6 +25,8 @@ vi.mock('../../lib/audit-api', () => ({
     ],
     meta: { page: 1, limit: 20, total: 1 },
   }),
+  downloadAuditRecordExport,
+  downloadAuditModuleExport: vi.fn(),
 }));
 
 function renderWithQueryClient(ui: ReactElement) {
@@ -38,5 +43,13 @@ describe('PLT-2 HistoryTab', () => {
     expect(screen.getByText('Corrected typo')).toBeInTheDocument();
     expect(screen.getByText(/title/)).toBeInTheDocument();
     expect(screen.getByText(/Old Title.*New Title/)).toBeInTheDocument();
+  });
+
+  it('PLT-2: the Export CSV button downloads this record\'s history for this entityType/entityId', async () => {
+    const user = userEvent.setup();
+    renderWithQueryClient(<HistoryTab entityType="Document" entityId="doc-1" />);
+
+    await user.click(await screen.findByRole('button', { name: 'Export CSV' }));
+    expect(downloadAuditRecordExport).toHaveBeenCalledWith('Document', 'doc-1');
   });
 });

@@ -1,4 +1,4 @@
-import type { CredentialType } from '@pharmaqms/shared';
+import { NotificationEmailMode, type CredentialType } from '@pharmaqms/shared';
 import type { TenantDocument } from './schemas/tenant.schema';
 
 export interface EffectiveJwtTtlSettings {
@@ -30,4 +30,30 @@ export function resolveSignatureCredentialType(
   defaultCredentialType: CredentialType,
 ): CredentialType {
   return tenant ? tenant.settings.signatureCredentialType : defaultCredentialType;
+}
+
+// PLT-6: digest option per tenant — immediate when no tenant document exists (same graceful
+// fallback as the other settings above).
+export function resolveNotificationEmailMode(tenant: TenantDocument | null): NotificationEmailMode {
+  return tenant?.settings.notificationEmailMode ?? NotificationEmailMode.IMMEDIATE;
+}
+
+// TRN-5: default matches the platform default (7 days) when no tenant document exists.
+export function resolveTrainingGracePeriodDays(tenant: TenantDocument | null): number {
+  return tenant?.settings.trainingGracePeriodDays ?? 7;
+}
+
+// EQP-4: defaults to the safer, blocking behavior when no tenant document exists.
+export function resolveBlockUsageWhenCalibrationOverdue(tenant: TenantDocument | null): boolean {
+  return tenant?.settings.blockUsageWhenCalibrationOverdue ?? true;
+}
+
+// EQP-7: null (unassigned) when no tenant document/setting exists yet.
+export function resolveMaintenanceRoleId(tenant: TenantDocument | null): string | null {
+  return tenant?.settings.maintenanceRoleId ?? null;
+}
+
+// EQP-7: defaults to the safer, verification-required behavior when no tenant document exists.
+export function resolveRequireMaintenanceVerification(tenant: TenantDocument | null): boolean {
+  return tenant?.settings.requireMaintenanceVerification ?? true;
 }

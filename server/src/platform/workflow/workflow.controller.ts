@@ -5,6 +5,7 @@ import {
   PermissionAction,
   PermissionModule,
   WorkflowAction,
+  WORKFLOW_SUBMIT_ENTITY_TYPE_PERMISSION,
   type AuthenticatedUser,
 } from '@pharmaqms/shared';
 import { Audited } from '../../common/decorators/audited.decorator';
@@ -73,9 +74,28 @@ export class WorkflowController {
   @Post('instances/submit')
   async submit(
     @CurrentTenant() tenantId: string,
+    @CurrentUser() user: AuthenticatedUser,
     @Body(new ZodValidationPipe(submitWorkflowRequestSchema)) dto: SubmitWorkflowRequest,
   ) {
-    const { before, after } = await this.workflowService.submit(tenantId, dto.entityType, dto.entityId);
+    // Session 19 hardening pass: this generic endpoint is reachable by any authenticated tenant
+    // user, so an entityType with its own module-level edit permission (see
+    // WORKFLOW_SUBMIT_ENTITY_TYPE_PERMISSION's header comment) must still be gated here —
+    // otherwise a caller with no permission on that module could submit straight through this
+    // endpoint instead of the module's own permission-gated wrapper.
+    const requiredPermission = WORKFLOW_SUBMIT_ENTITY_TYPE_PERMISSION[dto.entityType];
+    if (requiredPermission && !user.permissions.includes(requiredPermission)) {
+      throw new AppException(
+        ErrorCode.PERMISSION_DENIED,
+        'You do not have permission to submit this entity type for approval.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+
+    const { before, after } = await this.workflowService.submit(tenantId, dto.entityType, dto.entityId, {
+      userId: user.userId,
+      fullName: user.fullName,
+      roleId: user.roleId,
+    });
     return {
       data: after,
       audit: {
@@ -87,6 +107,9 @@ export class WorkflowController {
     };
   }
 
+  // No extra @RequirePermission() beyond authentication — any tenant user reviewing an approval
+  // (e.g. via the WorkflowInstancePage) needs to see the instance's own status/step/history;
+  // findInstanceOrThrow() is tenant-scoped, so a foreign tenant's instance id 404s regardless.
   @Get('instances/:id')
   async getInstance(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     const data = await this.workflowService.getInstance(tenantId, id);

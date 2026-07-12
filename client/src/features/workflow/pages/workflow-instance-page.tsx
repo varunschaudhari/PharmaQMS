@@ -2,6 +2,7 @@ import { WorkflowAction } from '@pharmaqms/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
 import { useParams } from 'react-router-dom';
+import { HistoryTab } from '../../../components/ui/history-tab';
 import { SignatureDialog } from '../../../components/ui/signature-dialog';
 import { WorkflowStepper } from '../../../components/ui/workflow-stepper';
 import { extractErrorMessage } from '../../../lib/api-error';
@@ -118,6 +119,13 @@ export function WorkflowInstancePage() {
           onCancel={() => setShowSignatureDialog(false)}
         />
       )}
+
+      {/* PLT-2/PLT-4: workflow actions are audited against the underlying business entity (not
+          the WorkflowInstance itself — see WorkflowController.submit/actOnStep), so this is the
+          exact same history an approver would see on that entity's own detail page. */}
+      <section className="rounded border border-slate-200 bg-white p-4">
+        <HistoryTab entityType={instance.entityType} entityId={instance.entityId} />
+      </section>
     </div>
   );
 }

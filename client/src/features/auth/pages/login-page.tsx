@@ -1,10 +1,11 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../context/auth-context';
 
 export function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberDevice, setRememberDevice] = useState(false);
@@ -17,7 +18,11 @@ export function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password, rememberDevice);
-      navigate('/', { replace: true });
+      // PLT-7: preserve a scanned /s/:code target through login. In-app relative paths only —
+      // an absolute URL here would be an open-redirect hole.
+      const redirect = searchParams.get('redirect');
+      const target = redirect && redirect.startsWith('/') && !redirect.startsWith('//') ? redirect : '/';
+      navigate(target, { replace: true });
     } catch {
       setError('Invalid email or password.');
     } finally {

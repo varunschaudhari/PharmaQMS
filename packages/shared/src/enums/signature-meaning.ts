@@ -6,6 +6,9 @@ export enum SignatureMeaning {
   TRAINED_READ_AND_UNDERSTOOD = 'trained_read_and_understood',
   VERIFIED_BY = 'verified_by',
   QA_DISPOSITION = 'qa_disposition',
+  // EQP-9: PM completion is a single-step e-sign (unlike EQP-7's separate engineer-completion +
+  // configurable QA-verification) — one distinct meaning for that one step.
+  PM_COMPLETED = 'pm_completed',
 }
 
 export const SIGNATURE_MEANING_LABELS: Record<SignatureMeaning, string> = {
@@ -14,4 +17,5 @@ export const SIGNATURE_MEANING_LABELS: Record<SignatureMeaning, string> = {
   [SignatureMeaning.TRAINED_READ_AND_UNDERSTOOD]: 'Trained — read and understood',
   [SignatureMeaning.VERIFIED_BY]: 'Verified by',
   [SignatureMeaning.QA_DISPOSITION]: 'QA Disposition',
+  [SignatureMeaning.PM_COMPLETED]: 'PM Completed by',
 };

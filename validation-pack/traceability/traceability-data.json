@@ -1,0 +1,3010 @@
+{
+  "generatedAt": "2026-07-12T07:23:31.143Z",
+  "requirements": [
+    {
+      "id": "DOC-1",
+      "priority": "P0",
+      "description": "Create document with metadata: number (PLT-5), title, type (SOP/Spec/Protocol/Format/Policy), department, effective date, review frequency, author. File upload (PDF/DOCX) per version.",
+      "testCount": 9,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-1 DOC-2 DOC-8 Documents HTTP surface"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-1: creates a document via multipart upload — numbered, audited, version 1.0 draft"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-1: the uploaded file streams back intact"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-1: documents list is tenant-scoped and paginated"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "describe",
+          "name": "DOC-1 DOC-2 DOC-8 DocumentsService"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-1: creates a document with metadata, a numbered identity (SOP-QA-001), and an immutable 1.0 draft file"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-1: rejects non-PDF/DOCX uploads"
+        },
+        {
+          "file": "client/src/features/documents/pages/documents-page.test.tsx",
+          "kind": "describe",
+          "name": "DOC-1 DOC-7 DocumentsPage"
+        },
+        {
+          "file": "client/src/features/documents/pages/documents-page.test.tsx",
+          "kind": "it",
+          "name": "DOC-1: lists documents with number, status, effective version, and next review date"
+        }
+      ]
+    },
+    {
+      "id": "DOC-2",
+      "priority": "P0",
+      "description": "Version control: major/minor versioning; only one Effective version per document; prior versions auto-marked Superseded and retained read-only.",
+      "testCount": 12,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "describe",
+          "name": "DOC-2 document version transition map"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: the happy path Draft → Under Review → Under Approval → Effective is allowed"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "it",
+          "name": "DOC-2/DOC-7: Effective can only become Superseded or Obsolete"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: terminal states (Superseded/Obsolete/Cancelled) allow NO transitions — retained read-only forever"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: a draft can never jump straight to Effective — every version passes through review and approval"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-1 DOC-2 DOC-8 Documents HTTP surface"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "describe",
+          "name": "DOC-1 DOC-2 DOC-8 DocumentsService"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: only one Effective version — making a new version Effective auto-Supersedes the prior one (audited)"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: minor bump versions increment correctly (2.0 → 2.1)"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: a new version cannot be drafted while another is still in flight"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: invalid transitions throw and change nothing — prior versions are read-only"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-2: document status derives correctly — Effective + new draft = Under Revision"
+        }
+      ]
+    },
+    {
+      "id": "DOC-3",
+      "priority": "P0",
+      "description": "Review → approval workflow via PLT-4 (configurable steps, e.g., Author → Dept Head review → QA Head approval). Each step = e-signature (PLT-3) with meaning.",
+      "testCount": 7,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "it",
+          "name": "DOC-3: rejections travel backwards — approval → review/draft, review → draft"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-3 DOC-6 DOC-7 document lifecycle over HTTP"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-3: submit → review e-sign → approval e-sign carries the version to Effective with signature meanings"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-3 acceptance (§7.1): a rejection with comment returns the version to the author as Draft, and who/when/why lands in the audit trail"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4 hardening: a user without documents:edit cannot submit a DocumentVersion via the generic workflow endpoint (bypassing DOC-3\\'s own gate)"
+        },
+        {
+          "file": "client/src/features/documents/pages/document-detail-page.test.tsx",
+          "kind": "describe",
+          "name": "DOC-3 DocumentDetailPage"
+        },
+        {
+          "file": "client/src/features/documents/pages/document-detail-page.test.tsx",
+          "kind": "it",
+          "name": "DOC-3: a draft document shows version history, HistoryTab, and submits for review"
+        }
+      ]
+    },
+    {
+      "id": "DOC-4",
+      "priority": "P0",
+      "description": "Effective documents render/print as **controlled copies**: header block (doc no., version, effective date), footer watermark (\"Controlled Copy — verify current version by scanning QR\"), and a **QR code** resolving to the live version-check page.",
+      "testCount": 3,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-4 DOC-5 controlled copies + QR version check"
+        },
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-4: the controlled copy is a stamped PDF (same page count) and printing it is audited (who/version/when)"
+        },
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-4: a draft version has no controlled copy"
+        }
+      ]
+    },
+    {
+      "id": "DOC-5",
+      "priority": "P0",
+      "description": "QR version check (public-ish page, no PII): scanning a printed copy shows \"✔ CURRENT — v3.0 effective 01-Aug-2026\" or \"✘ OBSOLETE — current version is v4.0\". Requires login only to open the full document.",
+      "testCount": 6,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-4 DOC-5 controlled copies + QR version check"
+        },
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-5: scanning the CURRENT version needs no login and shows version + effective date"
+        },
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-5 acceptance (§7.1): once v2.0 becomes Effective, scanning the printed v1.0 copy shows OBSOLETE with the current version number"
+        },
+        {
+          "file": "server/src/modules/documents/tests/controlled-copy.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-5: an unknown or non-document code stays a plain 404 — nothing leaks publicly"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "it",
+          "name": "DOC-5: scanning a CURRENT controlled copy shows the check WITHOUT any login"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "it",
+          "name": "DOC-5: scanning a stale printed copy shows OBSOLETE with the current version number"
+        }
+      ]
+    },
+    {
+      "id": "DOC-6",
+      "priority": "P0",
+      "description": "Periodic review: background job flags documents past review frequency; QA dashboard widget + notification. Review outcome = \"reaffirm\" (new review date, minor version) or \"revise\" (starts revision workflow).",
+      "testCount": 7,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/document-review.scanner.spec.ts",
+          "kind": "describe",
+          "name": "DOC-6 periodic-review due-date scanner"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-review.scanner.spec.ts",
+          "kind": "it",
+          "name": "DOC-6: registers under a stable key the framework can dedupe on"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-review.scanner.spec.ts",
+          "kind": "it",
+          "name": "DOC-6: a document past its review date maps to an OVERDUE finding for the author"
+        },
+        {
+          "file": "server/src/modules/documents/tests/document-review.scanner.spec.ts",
+          "kind": "it",
+          "name": "DOC-6: a document due within the window (but not past) maps to DUE_SOON, with a dedupeKey stable across daily runs"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-3 DOC-6 DOC-7 document lifecycle over HTTP"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-6: reaffirm is e-signed, bumps a minor version sharing the same immutable file, and resets the review clock"
+        },
+        {
+          "file": "client/src/features/dashboard/pages/qa-home-page.test.tsx",
+          "kind": "it",
+          "name": "EQP-4/TRN-5/DOC-6: shows overdue calibrations (filtered from due_soon+overdue), training overdue, and review-due widgets when permitted"
+        }
+      ]
+    },
+    {
+      "id": "DOC-7",
+      "priority": "P0",
+      "description": "Obsolescence workflow with e-signature; obsolete docs excluded from user-facing search but retained and auditable.",
+      "testCount": 4,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/document-transitions.spec.ts",
+          "kind": "it",
+          "name": "DOC-2/DOC-7: Effective can only become Superseded or Obsolete"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-3 DOC-6 DOC-7 document lifecycle over HTTP"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-7: obsolescence requires a fresh e-signature, hides the document from default search, and retains it auditable"
+        },
+        {
+          "file": "client/src/features/documents/pages/documents-page.test.tsx",
+          "kind": "describe",
+          "name": "DOC-1 DOC-7 DocumentsPage"
+        }
+      ]
+    },
+    {
+      "id": "EQP-1",
+      "priority": "P0",
+      "description": "Equipment master: code (PLT-5), name, make/model/serial, location (room), department, criticality (GMP-critical Y/N), status (Active / Under Maintenance / Under Qualification / Retired), install date.",
+      "testCount": 16,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 equipment status transition map"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: Active can move to Under Maintenance, Under Qualification, Retired, or (EQP-5) Do Not Use"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: Under Maintenance / Under Qualification return to Active or go to Retired"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: Retired is terminal — no transitions out (Iron Rule 3)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: Under Maintenance cannot jump directly to Under Qualification"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 EQP-2 EQP-3 Equipment HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-1: creates equipment (audited) with a numbered code"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-1: a status transition follows the map and is audited; an invalid one is rejected"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-1: list is tenant-scoped and paginated"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 EQP-2 EQP-3 EquipmentService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: creates equipment with a numbered code, ACTIVE by default"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: rejects creation against an unknown department"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: status transitions follow the explicit map — Active → Under Maintenance → Active is fine, Retired → Active is not"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: list supports status/department filters and search, tenant-scoped"
+        },
+        {
+          "file": "client/src/features/equipment/pages/equipment-detail-page.test.tsx",
+          "kind": "describe",
+          "name": "EQP-1 EquipmentDetailPage"
+        },
+        {
+          "file": "client/src/features/equipment/pages/equipment-detail-page.test.tsx",
+          "kind": "it",
+          "name": "EQP-1/EQP-10: shows equipment metadata, HistoryTab, transitions status through the allowed map, and downloads the history report"
+        }
+      ]
+    },
+    {
+      "id": "EQP-2",
+      "priority": "P0",
+      "description": "Each equipment gets a QR (PLT-7). Printable durable-label PDF (multiple sizes). Scan → mobile status card.",
+      "testCount": 4,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 EQP-2 EQP-3 Equipment HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-2: the QR PNG and label PDF endpoints work for the equipment\\'s code (reusing PLT-7)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 EQP-2 EQP-3 EquipmentService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-2: every created equipment gets a QR code with a working scan URL"
+        }
+      ]
+    },
+    {
+      "id": "EQP-3",
+      "priority": "P0",
+      "description": "**Status card (on scan):** live calibration status (Valid until DD-MMM / DUE / OVERDUE — color-coded), qualification status, PM due date, current status, last 5 logbook entries, action buttons per user role.",
+      "testCount": 10,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "describe",
+          "name": "EQP-3/EQP-4 calibration status derivation"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "it",
+          "name": "EQP-3: no due date at all is NOT_SCHEDULED"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 EQP-2 EQP-3 Equipment HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-3: ANY authenticated user can open the status card via the QR resolve + status-card endpoints"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-1 EQP-2 EQP-3 EquipmentService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-3: the status card reports NOT_SCHEDULED calibration and role-gated action stubs"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "describe",
+          "name": "EQP-3 EquipmentStatusCard"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-3: shows NOT SCHEDULED calibration, current status, and stub sections for qualification/PM/logbook"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-3: color-codes an OVERDUE calibration"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "it",
+          "name": "EQP-3: an authenticated scan of an Equipment code renders the real status card, not the generic stub"
+        }
+      ]
+    },
+    {
+      "id": "EQP-4",
+      "priority": "P0",
+      "description": "Calibration: schedule per equipment (frequency, parameters, tolerance class, internal/external agency); auto-generate due tasks; record results + certificate upload; QA verification sign-off (e-sign). Overdue calibration flips equipment card to OVERDUE and (configurable) blocks usage logging with a warning.",
+      "testCount": 28,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-4 EQP-5 Calibration HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-4: an engineer creates a calibration schedule for the equipment"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-4: the engineer records a PASS calibration result with a certificate; QA verifies it"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-4: the calibration-due dashboard lists this equipment"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-4 EQP-5 CalibrationService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: creates a calibration schedule and reports it back"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: recording a result requires an existing schedule"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a PASS result can be QA-verified and advances the schedule nextDueDate"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: the calibration-due dashboard lists only DUE_SOON/OVERDUE schedules"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "describe",
+          "name": "EQP-4 equipment-calibration due-date scanner"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: registers under a stable key"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: an overdue schedule notifies the department head (not the operator)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a schedule with no configured department head produces no finding"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a schedule that is still VALID (far in the future) produces no finding"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: no schedules produces no findings (and skips the equipment/department lookups)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-calibration.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a DUE_SOON schedule (within 30 days) notifies with a due_soon event"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "describe",
+          "name": "EQP-3/EQP-4 calibration status derivation"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a due date in the past is OVERDUE"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a due date exactly now is OVERDUE (inclusive boundary)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a due date within 30 days is DUE_SOON"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-status.spec.ts",
+          "kind": "it",
+          "name": "EQP-4: a due date more than 30 days out is VALID"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-4/EQP-6: usage logging is blocked when calibration is overdue and the tenant blocks on overdue (default true)"
+        },
+        {
+          "file": "client/src/features/dashboard/pages/qa-home-page.test.tsx",
+          "kind": "it",
+          "name": "EQP-4/TRN-5/DOC-6: shows overdue calibrations (filtered from due_soon+overdue), training overdue, and review-due widgets when permitted"
+        },
+        {
+          "file": "client/src/features/equipment/components/calibration-panel.test.tsx",
+          "kind": "describe",
+          "name": "EQP-4 EQP-5 CalibrationPanel"
+        },
+        {
+          "file": "client/src/features/equipment/components/calibration-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-4: an operator with no equipment:edit/approve sees records but no schedule/record forms"
+        },
+        {
+          "file": "client/src/features/equipment/components/calibration-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-4: an engineer can create a calibration schedule"
+        },
+        {
+          "file": "client/src/features/equipment/components/calibration-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-4: QA can verify a PASS record pending verification"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-4: shows a usage-blocked warning when overdue calibration blocks usage"
+        }
+      ]
+    },
+    {
+      "id": "EQP-5",
+      "priority": "P0",
+      "description": "Out-of-tolerance (OOT) handling: failed calibration requires an impact-assessment note and flags the equipment \"Do Not Use\" until QA disposition (e-sign). (Full deviation linkage arrives in Phase 2 — design the reference field now.)",
+      "testCount": 13,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-4 EQP-5 Calibration HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-5: a FAIL/OOT result requires an impact-assessment note and immediately sets Do Not Use"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-4 EQP-5 CalibrationService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-5: a FAIL/OOT result immediately quarantines the equipment (Do Not Use), before any QA action"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-5: QA disposition \"release\" returns the equipment to Active; nextDueDate is untouched"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-5: QA disposition \"retain_do_not_use\" keeps the equipment quarantined"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "it",
+          "name": "EQP-1: Active can move to Under Maintenance, Under Qualification, Retired, or (EQP-5) Do Not Use"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-transitions.spec.ts",
+          "kind": "it",
+          "name": "EQP-5: Do Not Use is structurally reachable/leavable, but only via the calibration flow (service-layer guard, not this map)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-5/EQP-6: a Do Not Use equipment blocks new usage-start logging via the real HTTP path"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-5/EQP-6: usage logging is blocked when the equipment is flagged Do Not Use, and again when Retired"
+        },
+        {
+          "file": "client/src/features/equipment/components/calibration-panel.test.tsx",
+          "kind": "describe",
+          "name": "EQP-4 EQP-5 CalibrationPanel"
+        },
+        {
+          "file": "client/src/features/equipment/components/calibration-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-5: QA disposition requires a note before the signature dialog appears"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-5: shows a DO NOT USE banner when the equipment is quarantined"
+        }
+      ]
+    },
+    {
+      "id": "EQP-6",
+      "priority": "P0",
+      "description": "**Digital logbook via QR:** authenticated operator scans → logs `Usage start/stop (product/batch ref free-text in v1)`, `Cleaning done (type: routine/full)`, `Breakdown report (description + photo)`. Every entry: auto user + server timestamp; entries immutable — corrections via strike-through-style amendment entry, never edit.",
+      "testCount": 24,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-6 EQP-7 Logbook + Maintenance HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-6: an authenticated operator (no elevated permission) starts and stops a usage session"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-6: logs a cleaning entry"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-6/EQP-7: a breakdown report (with a photo) auto-creates a maintenance task and notifies the maintenance role"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-6: the status card shows the last 5 logbook entries"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-6: a correction is logged as a NEW amendment entry, never an edit"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-5/EQP-6: a Do Not Use equipment blocks new usage-start logging via the real HTTP path"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-6 EQP-7 LogbookService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-6: usage start then stop, in order"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-6: cannot start a second usage session while one is already open; cannot stop with no open session"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-6: cleaning entries log the cleaning type"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-6/EQP-7: a breakdown report auto-creates a maintenance task and notifies the maintenance role"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-6: a correction is a NEW amendment entry — the original is never edited"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-5/EQP-6: usage logging is blocked when the equipment is flagged Do Not Use, and again when Retired"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-4/EQP-6: usage logging is blocked when calibration is overdue and the tenant blocks on overdue (default true)"
+        },
+        {
+          "file": "client/src/features/equipment/components/logbook-panel.test.tsx",
+          "kind": "describe",
+          "name": "EQP-6 LogbookPanel"
+        },
+        {
+          "file": "client/src/features/equipment/components/logbook-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: lists logbook entries with photo/correction actions"
+        },
+        {
+          "file": "client/src/features/equipment/components/logbook-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: logs a correction as a new amendment, never editing the original"
+        },
+        {
+          "file": "client/src/features/equipment/components/logbook-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: shows an empty state when there are no entries"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: starts a usage session with a product/batch reference"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: stops usage immediately (no form) when a session is already open"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: logs a cleaning entry by type"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-6/EQP-7: reports a breakdown with a description"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-6: a correction logs a NEW amendment entry, never edits the original"
+        }
+      ]
+    },
+    {
+      "id": "EQP-7",
+      "priority": "P0",
+      "description": "Breakdown entry auto-creates a maintenance task assigned to maintenance role; closure requires engineer completion note + (configurable) QA/user verification.",
+      "testCount": 16,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-6 EQP-7 Logbook + Maintenance HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-6/EQP-7: a breakdown report (with a photo) auto-creates a maintenance task and notifies the maintenance role"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-7 / PLT-1: only QA (equipment:approve) can verify — the engineer cannot; QA verification closes it"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-7: the open-maintenance-tasks queue no longer lists the closed task"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-6 EQP-7 LogbookService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-6/EQP-7: a breakdown report auto-creates a maintenance task and notifies the maintenance role"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/maintenance.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-7 MaintenanceService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/maintenance.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-7: creates a task snapshotting the tenant maintenance-role + verification settings, and notifies each role holder"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/maintenance.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-7: with verification required, closing moves to PENDING_VERIFICATION, then QA verification e-signs and closes it"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/maintenance.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-7: with verification NOT required, closing goes straight to CLOSED (no verify step)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/maintenance.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-7: listOpen only returns OPEN/PENDING_VERIFICATION tasks, tenant-scoped"
+        },
+        {
+          "file": "client/src/features/equipment/components/maintenance-task-panel.test.tsx",
+          "kind": "describe",
+          "name": "EQP-7 MaintenanceTaskPanel"
+        },
+        {
+          "file": "client/src/features/equipment/components/maintenance-task-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-7: an engineer closes an open task with a completion note"
+        },
+        {
+          "file": "client/src/features/equipment/components/maintenance-task-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-7: QA verifies a pending-verification task via e-signature"
+        },
+        {
+          "file": "client/src/features/equipment/components/maintenance-task-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-7: an operator with no equipment permissions sees tasks read-only"
+        },
+        {
+          "file": "client/src/mobile/components/equipment-status-card.test.tsx",
+          "kind": "it",
+          "name": "EQP-6/EQP-7: reports a breakdown with a description"
+        }
+      ]
+    },
+    {
+      "id": "EQP-8",
+      "priority": "P0",
+      "description": "Qualification records: IQ/OQ/PQ entries with protocol/report file upload, dates, status; requalification due tracking.",
+      "testCount": 20,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/equipment-qualification.scanner.spec.ts",
+          "kind": "describe",
+          "name": "EQP-8 equipment-requalification due-date scanner"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-qualification.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: registers under a stable key"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-qualification.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: an overdue requalification notifies the department head"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-qualification.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: a requalification due within 30 days produces a DUE_SOON finding"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-qualification.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: no configured department head produces no finding"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-qualification.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: an empty schedule produces no findings (and skips the equipment/department lookups)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-8 EQP-9 Qualification + PM HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-8: records an IQ event (protocol only), then a PQ PASS with a requalification frequency"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-8: a report can be attached after the fact, exactly once"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-8 QualificationService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: records an IQ event with just a protocol (report optional)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: a PASSed PQ with a requalification frequency sets the equipment-level summary; attaching a report afterward works exactly once"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: a FAILed PQ does not set a requalification due date even if a frequency is supplied"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: an IQ/OQ PASS does not set a requalification schedule (only PQ/REQUALIFICATION do)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: listRequalificationSchedule reflects every equipment with a due date on the calendar"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-8: file content-type/size validation rejects an invalid protocol upload"
+        },
+        {
+          "file": "client/src/features/equipment/components/qualification-panel.test.tsx",
+          "kind": "describe",
+          "name": "EQP-8 QualificationPanel"
+        },
+        {
+          "file": "client/src/features/equipment/components/qualification-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-8: an operator with no equipment:edit sees records read-only (no record form)"
+        },
+        {
+          "file": "client/src/features/equipment/components/qualification-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-8: an engineer records a qualification event (protocol only)"
+        },
+        {
+          "file": "client/src/features/equipment/components/qualification-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-8: attaches a report to a record missing one"
+        }
+      ]
+    },
+    {
+      "id": "EQP-9",
+      "priority": "P0",
+      "description": "Preventive maintenance: PM plan per equipment (frequency, checklist text), auto task generation, completion with e-sign.",
+      "testCount": 19,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/equipment-pm.scanner.spec.ts",
+          "kind": "describe",
+          "name": "EQP-9 equipment-pm due-date scanner (auto task generation)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-pm.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: registers under a stable key"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-pm.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: an overdue plan triggers auto task generation AND notifies the department head"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-pm.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: a plan due soon (within 30 days) notifies but does NOT yet generate a task"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-pm.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: a plan that is still VALID produces no finding and no task"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-pm.scanner.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: no plans produces no findings (and skips the equipment/department lookups)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/pm.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-9 PmService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/pm.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: creates a PM plan and reports it back"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/pm.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: generateTaskIfDue is idempotent (unique index guards a duplicate due-cycle)"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/pm.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: generateTaskIfDue does nothing before the due date arrives"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/pm.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-9 / Iron Rule 4: completing a task is an e-signature and advances the plan\\'s nextDueDate"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/pm.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-9: listOpenTasks / listTasksForEquipment reflect status correctly"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-8 EQP-9 Qualification + PM HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-9: an engineer creates a PM plan; the status card shows the real PM due date"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-9 / Iron Rule 4: completes a PM task with an e-signature; the plan advances; PLT-1 gates completion to equipment:edit"
+        },
+        {
+          "file": "client/src/features/equipment/components/pm-panel.test.tsx",
+          "kind": "describe",
+          "name": "EQP-9 PmPanel"
+        },
+        {
+          "file": "client/src/features/equipment/components/pm-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-9: an engineer creates a PM plan"
+        },
+        {
+          "file": "client/src/features/equipment/components/pm-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-9 / Iron Rule 4: completing a task requires a note, then an e-signature"
+        },
+        {
+          "file": "client/src/features/equipment/components/pm-panel.test.tsx",
+          "kind": "it",
+          "name": "EQP-9: a user with no equipment:edit cannot see the complete button"
+        }
+      ]
+    },
+    {
+      "id": "PLT-1",
+      "priority": "P0",
+      "description": "Login, JWT, roles, permission matrix, lockout, session policy",
+      "testCount": 45,
+      "tests": [
+        {
+          "file": "server/src/common/guards/jwt-auth.guard.spec.ts",
+          "kind": "describe",
+          "name": "PLT-1 JwtAuthGuard"
+        },
+        {
+          "file": "server/src/common/guards/jwt-auth.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: JwtAuthGuard allows public routes through without a token"
+        },
+        {
+          "file": "server/src/common/guards/jwt-auth.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: JwtAuthGuard rejects requests without a bearer token"
+        },
+        {
+          "file": "server/src/common/guards/jwt-auth.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: JwtAuthGuard rejects an invalid or expired token"
+        },
+        {
+          "file": "server/src/common/guards/jwt-auth.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: JwtAuthGuard attaches the decoded user to the request for a valid access token"
+        },
+        {
+          "file": "server/src/common/guards/permissions.guard.spec.ts",
+          "kind": "describe",
+          "name": "PLT-1 PermissionsGuard"
+        },
+        {
+          "file": "server/src/common/guards/permissions.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: PermissionsGuard denies access when the user lacks the required permission"
+        },
+        {
+          "file": "server/src/common/guards/permissions.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: PermissionsGuard denies access when there is no authenticated user"
+        },
+        {
+          "file": "server/src/common/guards/permissions.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: PermissionsGuard allows access when the user has the required permission"
+        },
+        {
+          "file": "server/src/common/guards/permissions.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: PermissionsGuard allows access when the route requires no permission"
+        },
+        {
+          "file": "server/src/common/guards/tenant.guard.spec.ts",
+          "kind": "describe",
+          "name": "PLT-1 TenantGuard"
+        },
+        {
+          "file": "server/src/common/guards/tenant.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: TenantGuard rejects requests with no tenant context"
+        },
+        {
+          "file": "server/src/common/guards/tenant.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: TenantGuard allows requests once a tenant context is established"
+        },
+        {
+          "file": "server/src/common/guards/tenant.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: TenantGuard allows public routes through without tenant context"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: a user without admin permission cannot create records (RBAC)"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: a user without documents:create cannot create documents"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: an engineer (holding equipment:edit but not equipment:approve) cannot verify a calibration record"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: equipment:view is required to download the history report"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: an operator without equipment:create cannot create equipment"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: an operator (no equipment:edit) cannot close a maintenance task; the engineer can"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-7 / PLT-1: only QA (equipment:approve) can verify — the engineer cannot; QA verification closes it"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-9 / Iron Rule 4: completes a PM task with an e-signature; the plan advances; PLT-1 gates completion to equipment:edit"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-1 Auth HTTP surface"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: POST /auth/login succeeds with correct credentials and returns tokens"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: POST /auth/login rejects an incorrect password with AUTH_INVALID_CREDENTIALS"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: POST /auth/login returns a validation error for a malformed email"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: POST /auth/refresh returns new tokens for a valid refresh token"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: POST /auth/refresh rejects a malformed refresh token"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-1: POST /auth/refresh returns a validation error when refreshToken is missing"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-1 AuthService"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: user document requires a tenantId"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: login only matches a user within the given tenantId (tenant isolation)"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: login rejects a tenantId that does not match the user (tenant isolation)"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: login locks the account after the configured number of consecutive failed attempts"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: a successful login resets the failed-attempt counter"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: refresh rotates the refresh token and rejects reuse of the previous one"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: refresh rejects a malformed token"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: login flags mustChangePassword when the password has expired"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: login does not flag mustChangePassword for a recently changed password"
+        },
+        {
+          "file": "server/src/platform/auth/tests/auth.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-1: access token embeds the role permission matrix"
+        },
+        {
+          "file": "client/src/app/protected-route.test.tsx",
+          "kind": "describe",
+          "name": "PLT-1 ProtectedRoute"
+        },
+        {
+          "file": "client/src/app/protected-route.test.tsx",
+          "kind": "it",
+          "name": "PLT-1: redirects unauthenticated users to /login"
+        },
+        {
+          "file": "client/src/features/auth/pages/login-page.test.tsx",
+          "kind": "describe",
+          "name": "PLT-1 LoginPage"
+        },
+        {
+          "file": "client/src/features/auth/pages/login-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-1: submits credentials and navigates to the home page on success"
+        }
+      ]
+    },
+    {
+      "id": "PLT-2",
+      "priority": "P0",
+      "description": "Single `auditEvents` writer used by all modules; per-record history API; export",
+      "testCount": 51,
+      "tests": [
+        {
+          "file": "server/src/common/interceptors/audit-trail.interceptor.spec.ts",
+          "kind": "describe",
+          "name": "PLT-2 AuditTrailInterceptor"
+        },
+        {
+          "file": "server/src/common/interceptors/audit-trail.interceptor.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: passes the response through unchanged when the handler has no @Audited() metadata"
+        },
+        {
+          "file": "server/src/common/interceptors/audit-trail.interceptor.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: records the audit event and strips `audit` from the response"
+        },
+        {
+          "file": "server/src/common/interceptors/audit-trail.interceptor.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: does not record when the handler has @Audited() metadata but the response has no audit payload"
+        },
+        {
+          "file": "server/src/common/interceptors/audit-trail.interceptor.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: does not record when there is no authenticated user on the request"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: editing the record writes a field-level old→new diff into its history"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: the full journey is visible in the record\\'s history — create, edit, submit, both approvals"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "describe",
+          "name": "PLT-2 diffObjects"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: reports no changes for identical objects"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: reports a changed field with old and new values"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: reports a newly added field when before is missing it"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: reports a removed field when after is missing it"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: treats null and undefined before/after snapshots as empty objects"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: ignores default noise fields (_id, __v, createdAt, updatedAt, passwordHash)"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: normalizes ObjectId and Date values for stable comparison"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: reports a changed ObjectId field using its string form"
+        },
+        {
+          "file": "server/src/platform/audit/audit-diff.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: respects a custom ignoreFields list"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "describe",
+          "name": "PLT-2 auditEvents append-only enforcement"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: create() and find() succeed"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: updateOne() is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: updateMany() is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: findOneAndUpdate() is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: deleteOne() is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: deleteMany() is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: findOneAndDelete() is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: re-saving an already-persisted document is rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit-event.schema.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: document-level deleteOne()/updateOne() are also rejected"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-2 Audit HTTP surface"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: a successful login writes a LOGIN_SUCCESS audit event visible in that user\\'s history"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: repeated failed logins write LOGIN_FAILURE events then an ACCOUNT_LOCKED event"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: change-password writes a PASSWORD_CHANGED audit event and is queryable via history"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: history is scoped per tenant — tenant A cannot see tenant B\\'s audit events"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: history endpoint rejects unauthenticated requests"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: GET /audit/:entityType/:entityId/history/export returns a CSV file"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-2: GET /audit/:entityType/export returns a CSV file for the whole module"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-2 AuditService"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: record() writes an event with the actor, entity, action, and field-level diff"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: record() defaults reason to null and changes to [] when before/after are omitted"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: findHistory paginates and sorts newest-first"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: findHistory is scoped to tenant, entityType, and entityId (tenant isolation)"
+        },
+        {
+          "file": "server/src/platform/audit/tests/audit.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-2: findAllForModule returns every event for an entityType regardless of entityId"
+        },
+        {
+          "file": "client/src/components/ui/export-audit-button.test.tsx",
+          "kind": "describe",
+          "name": "PLT-2 ExportAuditButton"
+        },
+        {
+          "file": "client/src/components/ui/export-audit-button.test.tsx",
+          "kind": "it",
+          "name": "PLT-2: with an entityId, exports that one record\\'s history"
+        },
+        {
+          "file": "client/src/components/ui/export-audit-button.test.tsx",
+          "kind": "it",
+          "name": "PLT-2: without an entityId, exports the whole module\\'s history"
+        },
+        {
+          "file": "client/src/components/ui/export-audit-button.test.tsx",
+          "kind": "it",
+          "name": "PLT-2: shows an error message if the export request fails"
+        },
+        {
+          "file": "client/src/components/ui/history-tab.test.tsx",
+          "kind": "describe",
+          "name": "PLT-2 HistoryTab"
+        },
+        {
+          "file": "client/src/components/ui/history-tab.test.tsx",
+          "kind": "it",
+          "name": "PLT-2: renders audit events with actor, action, field-level changes, and reason"
+        },
+        {
+          "file": "client/src/components/ui/history-tab.test.tsx",
+          "kind": "it",
+          "name": "PLT-2: the Export CSV button downloads this record\\'s history for this entityType/entityId"
+        },
+        {
+          "file": "client/src/features/test-records/pages/test-record-detail-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-2 PLT-3 PLT-4 PLT-5 PLT-7: shows number, signatures, history, QR block, and submits for approval"
+        },
+        {
+          "file": "client/src/features/workflow/pages/workflow-instance-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-2: includes the HistoryTab for the underlying entity (audited against entityType/entityId, not the instance id)"
+        }
+      ]
+    },
+    {
+      "id": "PLT-3",
+      "priority": "P0",
+      "description": "Re-auth challenge, signature manifest, record-hash binding",
+      "testCount": 44,
+      "tests": [
+        {
+          "file": "server/src/common/database/append-only.plugin.spec.ts",
+          "kind": "describe",
+          "name": "PLT-3 applyAppendOnly (shared by auditEvents and signatures)"
+        },
+        {
+          "file": "server/src/common/database/append-only.plugin.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: create() and find() succeed"
+        },
+        {
+          "file": "server/src/common/database/append-only.plugin.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: updateOne()/updateMany()/findOneAndUpdate() are rejected"
+        },
+        {
+          "file": "server/src/common/database/append-only.plugin.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: deleteOne()/deleteMany()/findOneAndDelete() are rejected"
+        },
+        {
+          "file": "server/src/common/database/append-only.plugin.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: re-saving an already-persisted document is rejected, but document-level delete/update also reject"
+        },
+        {
+          "file": "server/src/common/guards/signature.guard.spec.ts",
+          "kind": "describe",
+          "name": "PLT-3 SignatureGuard"
+        },
+        {
+          "file": "server/src/common/guards/signature.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: rejects when no signingToken is presented (session-only signing rejected)"
+        },
+        {
+          "file": "server/src/common/guards/signature.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: delegates to EsignService and attaches the signing context on success"
+        },
+        {
+          "file": "server/src/common/guards/signature.guard.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: propagates rejection from EsignService (e.g. invalid, expired, or reused token)"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3 + PLT-4: two real e-signatures carry the record to APPROVED; session-only signing is rejected"
+        },
+        {
+          "file": "server/src/platform/esign/snapshot-hash.util.spec.ts",
+          "kind": "describe",
+          "name": "PLT-3 snapshot-hash.util"
+        },
+        {
+          "file": "server/src/platform/esign/snapshot-hash.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: produces the same hash regardless of key order"
+        },
+        {
+          "file": "server/src/platform/esign/snapshot-hash.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: produces a different hash when content differs"
+        },
+        {
+          "file": "server/src/platform/esign/snapshot-hash.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: produces a 64-character hex SHA-256 digest"
+        },
+        {
+          "file": "server/src/platform/esign/snapshot-hash.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: normalizes nested objects and arrays regardless of key order"
+        },
+        {
+          "file": "server/src/platform/esign/snapshot-hash.util.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: verifyEntitySnapshot detects a tampered snapshot (hash mismatch)"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-3 E-Signature HTTP surface"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3: POST /esign/challenge issues a signing token for the correct password"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3: POST /esign/challenge rejects an incorrect password"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3: POST /esign/challenge rejects requests without a valid session"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3: creating a signature without a signingToken is rejected (session-only signing rejected)"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3: signs an entity, records the meaning, and rejects reuse of the signing token"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3: rejects a malformed create-signature payload (unknown meaning)"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-3 EsignService"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: challenge() issues a signing token for the correct credential"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: challenge() rejects an incorrect credential"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: challenge() caps the signing token TTL at 120 seconds"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: createSignature() records the meaning, entity ref, and a snapshot hash"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: findForEntity() returns signatures for that entity, newest first"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: verifySnapshot() detects a tampered snapshot (hash mismatch)"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: verifySnapshot() throws NOT_FOUND for an unknown signature id"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: rejects an invalid or expired signing token"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: rejects a token signed with the wrong secret"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: rejects a signing token whose user does not match the expected session"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: resolves the signing context for a valid, unused signing token"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-3: rejects reuse of the same signing token (single-use)"
+        },
+        {
+          "file": "client/src/components/ui/signature-dialog.test.tsx",
+          "kind": "describe",
+          "name": "PLT-3 SignatureDialog"
+        },
+        {
+          "file": "client/src/components/ui/signature-dialog.test.tsx",
+          "kind": "it",
+          "name": "PLT-3: shows the signature meaning and hands the caller a signing token after a successful challenge"
+        },
+        {
+          "file": "client/src/components/ui/signature-dialog.test.tsx",
+          "kind": "it",
+          "name": "PLT-3: shows an error message when the credential challenge fails"
+        },
+        {
+          "file": "client/src/components/ui/signature-manifest.test.tsx",
+          "kind": "describe",
+          "name": "PLT-3 SignatureManifest"
+        },
+        {
+          "file": "client/src/components/ui/signature-manifest.test.tsx",
+          "kind": "it",
+          "name": "PLT-3: renders each signature with signer name, meaning label, and timestamp"
+        },
+        {
+          "file": "client/src/components/ui/signature-manifest.test.tsx",
+          "kind": "it",
+          "name": "PLT-3: shows a placeholder when there are no signatures yet"
+        },
+        {
+          "file": "client/src/features/test-records/pages/test-record-detail-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-2 PLT-3 PLT-4 PLT-5 PLT-7: shows number, signatures, history, QR block, and submits for approval"
+        }
+      ]
+    },
+    {
+      "id": "PLT-4",
+      "priority": "P0",
+      "description": "Configurable multi-step approval flows (sequential steps, role-based assignees, reject-back-to-step, comments). Reuse Patent CRM design patterns.",
+      "testCount": 40,
+      "tests": [
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4 + PLT-6: submitting routes it into the 2-step approval and notifies the first assignee"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-3 + PLT-4: two real e-signatures carry the record to APPROVED; session-only signing is rejected"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents-lifecycle.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4 hardening: a user without documents:edit cannot submit a DocumentVersion via the generic workflow endpoint (bypassing DOC-3\\'s own gate)"
+        },
+        {
+          "file": "server/src/platform/esign/tests/esign.service.spec.ts",
+          "kind": "describe",
+          "name": "verifyAndConsumeSigningToken (also reused in-process by PLT-4 WorkflowService)"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow-transitions.spec.ts",
+          "kind": "describe",
+          "name": "PLT-4 workflow transition map"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow-transitions.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: SUBMIT is only allowed from DRAFT"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow-transitions.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: APPROVE/REJECT/REASSIGN are only allowed from IN_PROGRESS"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow-transitions.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: no actions are allowed from the terminal APPROVED status"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow-transitions.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: assertWorkflowActionAllowed() throws for an invalid transition"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow-transitions.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: assertWorkflowActionAllowed() does not throw for a valid transition"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-4 Workflow HTTP surface"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: creates a workflow template"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: a non-admin cannot create a workflow template"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: full happy path via HTTP — submit, two step approvals with real e-signatures, my-pending-tasks reflects each step"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: rejecting with a mandatory comment sends the instance back and is audited with that reason"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: a non-assignee is blocked from acting on a step (permission denial)"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: reassign requires admin permission and is audited with a reason"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4: workflow instances are tenant-isolated"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-4 WorkflowService"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: full happy path — submit, then two step approvals (two signatures) reach APPROVED"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: a non-assignee (wrong role) is blocked from approving"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: reject at the first step returns the instance to DRAFT (the author)"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: reject at a later step returns to its configured earlier step, not necessarily all the way to draft"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: reassign is audited with a reason and changes who may act on the step"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: invalid transitions throw — cannot re-submit an in-progress instance or act on an approved one"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: workflow instances are tenant-isolated — each tenant gets its own independent instance"
+        },
+        {
+          "file": "server/src/platform/workflow/tests/workflow.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-4: my-pending-tasks lists instances awaiting the actor\\'s role, and reassigned instances awaiting the specific user"
+        },
+        {
+          "file": "client/src/components/ui/workflow-stepper.test.tsx",
+          "kind": "describe",
+          "name": "PLT-4 WorkflowStepper"
+        },
+        {
+          "file": "client/src/components/ui/workflow-stepper.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: shows a draft message when the instance has not been submitted"
+        },
+        {
+          "file": "client/src/components/ui/workflow-stepper.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: shows the current step name and position while in progress"
+        },
+        {
+          "file": "client/src/components/ui/workflow-stepper.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: shows an Approved badge once the instance is fully approved"
+        },
+        {
+          "file": "client/src/features/dashboard/pages/qa-home-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: shows pending approvals with no permission gate, even with no other module access"
+        },
+        {
+          "file": "client/src/features/test-records/pages/test-record-detail-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-2 PLT-3 PLT-4 PLT-5 PLT-7: shows number, signatures, history, QR block, and submits for approval"
+        },
+        {
+          "file": "client/src/features/workflow/pages/pending-tasks-page.test.tsx",
+          "kind": "describe",
+          "name": "PLT-4 PendingTasksPage"
+        },
+        {
+          "file": "client/src/features/workflow/pages/pending-tasks-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: shows a message when there is nothing awaiting the user"
+        },
+        {
+          "file": "client/src/features/workflow/pages/pending-tasks-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: lists pending tasks with a link to review each one"
+        },
+        {
+          "file": "client/src/features/workflow/pages/workflow-instance-page.test.tsx",
+          "kind": "describe",
+          "name": "PLT-4 WorkflowInstancePage"
+        },
+        {
+          "file": "client/src/features/workflow/pages/workflow-instance-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: approves the current step after a successful signature challenge"
+        },
+        {
+          "file": "client/src/features/workflow/pages/workflow-instance-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-4: rejects with a mandatory comment"
+        }
+      ]
+    },
+    {
+      "id": "PLT-5",
+      "priority": "P0",
+      "description": "Tenant-configurable document/entity numbering (e.g., `SOP-QA-001`, `EQP-0042`, `TRN-2026-0113`) with no gaps/duplicates",
+      "testCount": 12,
+      "tests": [
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-5 + PLT-7: creating a record assigns TR-0001 from the numbering service and mints its QR identity"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-5 NumberingService"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: generates a simple padded sequence (EQP-0042 style)"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: generates a department-token sequence (SOP-QA-001 style), independent per department"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: generates a yearly-reset sequence (TRN-2026-0113 style)"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: rejects generation for an entityType with no configured scheme"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: rejects generation when the scheme requires a departmentCode and none is given"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: numbering is tenant-isolated — two tenants each get their own sequence starting at 1"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: 50 concurrent generateNumber calls produce a gapless, duplicate-free sequence"
+        },
+        {
+          "file": "server/src/platform/numbering/tests/numbering.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-5: updateScheme() applies changes and reports a before/after snapshot"
+        },
+        {
+          "file": "client/src/features/test-records/pages/test-record-detail-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-2 PLT-3 PLT-4 PLT-5 PLT-7: shows number, signatures, history, QR block, and submits for approval"
+        }
+      ]
+    },
+    {
+      "id": "PLT-6",
+      "priority": "P0",
+      "description": "Template-based email; events: assigned, due-soon, overdue, approved, rejected",
+      "testCount": 37,
+      "tests": [
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-4 + PLT-6: submitting routes it into the 2-step approval and notifies the first assignee"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-6: the submitting author is notified of the final approval"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-6 due-date scanner framework"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: scanners register into the framework; a duplicate key is rejected"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: the daily run turns scanner findings into notifications and records one scan-run per tenant/scanner/day"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: re-running the scan on the same day is idempotent — the scanner is not called again and nothing new is created"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: the next day the scanner runs again, but stable dedupeKeys still prevent duplicate notifications for the same fact"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: each tenant is scanned separately, and the run date follows the TENANT timezone"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/due-date-scan.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: formatDateInTimezone renders the tenant-local calendar day"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/email-delivery.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-6 EmailDeliveryService"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/email-delivery.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: sendForNotification() mails the recipient and stamps emailedAt; re-delivery is a no-op (safe job retries)"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/email-delivery.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: sendDailyDigests() batches all unsent notifications into ONE email per user for digest-mode tenants only"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/email-delivery.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-6 FileMailer transport"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/email-delivery.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: appends one JSON line per message to the outbox file"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-6 Notifications HTTP surface"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-6: notification endpoints reject unauthenticated requests"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-6: GET /notifications returns only the caller\\'s own notifications — not other users\\', not other tenants\\'"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-6: unread-count and mark-read work end-to-end, and mark-read writes an audit event"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-6: submitting a workflow via HTTP produces a task_assigned notification for the first step\\'s assignee (listener wiring)"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-6 NotificationsService"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: notify() creates a per-user log entry and writes an audit event for it"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: notify() with the same dedupeKey for the same user is idempotent — one entry, second call returns null"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: the same dedupeKey for two different recipients creates one entry each"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: immediate-mode tenants get an email enqueued; digest-mode tenants do not"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: list() returns only the requesting user\\'s notifications within their tenant (tenant isolation)"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/notifications.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: markRead() flips only the targeted own notifications, and unreadOnly listing reflects it"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "describe",
+          "name": "PLT-6 workflow event -> notification mapping"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: submit maps to task_assigned for every ACTIVE user holding the first step\\'s role"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: a non-final approval maps to task_assigned for the NEXT step\\'s role"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: the final approval maps to an approved notification for the submitter"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: reject back to DRAFT maps to a rejected notification (with the comment) for the submitter only"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: reject to an EARLIER STEP notifies the submitter (rejected) AND re-assigns that step\\'s role (task_assigned)"
+        },
+        {
+          "file": "server/src/platform/notifications/tests/workflow-notification.listener.spec.ts",
+          "kind": "it",
+          "name": "PLT-6: reassign maps to task_assigned for the substitute user only — not the step\\'s whole role"
+        },
+        {
+          "file": "client/src/components/ui/notification-bell.test.tsx",
+          "kind": "describe",
+          "name": "PLT-6 NotificationBell"
+        },
+        {
+          "file": "client/src/components/ui/notification-bell.test.tsx",
+          "kind": "it",
+          "name": "PLT-6: shows the unread count badge and lists unread notifications when opened"
+        },
+        {
+          "file": "client/src/components/ui/notification-bell.test.tsx",
+          "kind": "it",
+          "name": "PLT-6: mark-all-read calls the API and refreshes the badge"
+        }
+      ]
+    },
+    {
+      "id": "PLT-7",
+      "priority": "P0",
+      "description": "Generate/resolve short codes → entity; label PDF sheets; scan landing router `/s/:code`",
+      "testCount": 24,
+      "tests": [
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-5 + PLT-7: creating a record assigns TR-0001 from the numbering service and mints its QR identity"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: the QR code resolves to the record for tenant users — and its mobile scan URL is stable"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-2: the QR PNG and label PDF endpoints work for the equipment\\'s code (reusing PLT-7)"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-7 QR HTTP surface"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: an admin mints a QR code for an entity, and the creation is audited"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: a non-admin cannot mint codes over HTTP"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: any authenticated user in the tenant resolves the code to its entity"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: a user from another tenant scanning the code gets 404 (cross-tenant scan blocked)"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: unauthenticated resolution is rejected"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: the QR PNG endpoint streams a PNG image"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-7: the label PDF endpoint renders single and A4-grid PDFs"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-7 QrService"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-7: mints an opaque short code and builds the /s/:code scan URL"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-7: get-or-create is idempotent — one code per entity, re-posting returns the same code"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-7: a code collision is survived by regenerating — the unique index is the arbiter"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-7: resolve() maps the code back to its entity within the owning tenant"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-7: a cross-tenant scan is blocked — a foreign code resolves as NOT_FOUND, indistinguishable from an unknown code"
+        },
+        {
+          "file": "server/src/platform/qr/tests/qr.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-7: generatePng() returns a PNG image for the tenant\\'s own code"
+        },
+        {
+          "file": "client/src/features/test-records/pages/test-record-detail-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-2 PLT-3 PLT-4 PLT-5 PLT-7: shows number, signatures, history, QR block, and submits for approval"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "describe",
+          "name": "PLT-7 mobile scan landing (/s/:code)"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-7: an unauthenticated scan redirects to login PRESERVING the scanned target"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-7: an authenticated scan of a non-equipment entity resolves and shows the persistent \"Logged in as\" banner (generic stub)"
+        },
+        {
+          "file": "client/src/mobile/pages/scan-landing-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-7: a code the tenant cannot resolve shows an error card, not a crash"
+        }
+      ]
+    },
+    {
+      "id": "PLT-8",
+      "priority": "P0",
+      "description": "Tenant provisioning, user CRUD, department master, role assignment",
+      "testCount": 38,
+      "tests": [
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "describe",
+          "name": "Phase 0 gate — PLT-1 PLT-2 PLT-3 PLT-4 PLT-5 PLT-6 PLT-7 PLT-8 integration"
+        },
+        {
+          "file": "server/src/demo/test-record/tests/test-record.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8: tenant isolation holds end-to-end — an outsider can neither read the record nor resolve its QR"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/calibration.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8 tenant isolation: another tenant cannot see this equipment calibration schedule"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8 tenant isolation: another tenant cannot download this equipment history report"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8 tenant isolation: another tenant cannot see or scan this equipment"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/logbook-maintenance.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8 tenant isolation: another tenant cannot read this equipment logbook or maintenance tasks"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/qualification-pm.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8 tenant isolation: another tenant cannot read this equipment qualification/PM data"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8 tenant isolation: an outsider sees no assignments and cannot reach this tenant\\'s training data"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/department.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-8 DepartmentService"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/department.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: creates a department with an uppercased code"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/department.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: rejects a duplicate department code within the same tenant"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/department.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: the same department code is allowed across different tenants (tenant isolation)"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/department.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: update() deactivates a department instead of deleting it (Iron Rule 3)"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/department.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: list() only returns departments for the given tenant"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.e2e-spec.ts",
+          "kind": "describe",
+          "name": "PLT-8 Tenant/Department/User admin HTTP surface"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8: POST /tenants rejects a non-platform-admin session"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8: provisions a tenant, its admin can log in, and manage departments/users end-to-end"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.e2e-spec.ts",
+          "kind": "it",
+          "name": "PLT-8: GET /tenants/:id rejects a non-platform-admin session"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-8 TenantService"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: provisionTenant() creates the tenant, a full-permission Tenant Admin role, and the first user"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: provisionTenant() rejects a duplicate slug"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: provisionTenant() applies partial settings overrides on top of defaults"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: updateSettings() applies a partial update and reports before/after"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/tenant.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: listTenants() and findById() return provisioned tenants"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "describe",
+          "name": "PLT-8 UserAdminService"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: createUser() hashes the password and assigns the given role"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: createUser() rejects a weak password"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: createUser() rejects a duplicate email within the same tenant"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: createUser() rejects an unknown roleId"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: updateUser() reassigns role/department and reports before/after"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: updateUser() deactivating a user bumps tokenVersion to invalidate sessions (Iron Rule 3: no hard delete)"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: listUsers() paginates and is scoped to the tenant (tenant isolation)"
+        },
+        {
+          "file": "server/src/platform/tenant/tests/user-admin.service.spec.ts",
+          "kind": "it",
+          "name": "PLT-8: listRoles() returns only the tenant\\'s own roles"
+        },
+        {
+          "file": "client/src/app/platform-admin-route.test.tsx",
+          "kind": "describe",
+          "name": "PLT-8 PlatformAdminRoute"
+        },
+        {
+          "file": "client/src/app/platform-admin-route.test.tsx",
+          "kind": "it",
+          "name": "PLT-8: redirects a signed-in but non-platform-admin user to the home page"
+        },
+        {
+          "file": "client/src/app/platform-admin-route.test.tsx",
+          "kind": "it",
+          "name": "PLT-8: allows a platform-admin user through"
+        },
+        {
+          "file": "client/src/features/admin/pages/departments-page.test.tsx",
+          "kind": "describe",
+          "name": "PLT-8 DepartmentsPage"
+        },
+        {
+          "file": "client/src/features/admin/pages/departments-page.test.tsx",
+          "kind": "it",
+          "name": "PLT-8: lists departments and creates a new one"
+        }
+      ]
+    },
+    {
+      "id": "TRN-1",
+      "priority": "P0",
+      "description": "Training matrix: role/department × document mapping (from DOC-9 or manual). Adding a user to a role auto-generates their pending training items.",
+      "testCount": 7,
+      "tests": [
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-4 TRN-5 Training HTTP surface"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-9 + TRN-1: setting a document\\'s distribution to a role auto-generates a pending assignment once it is Effective"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "TRN-1: the training matrix shows the document with correct assignment/completion counts"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-5 TrainingService"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-1: a distribution-list edit with an Effective version auto-generates pending assignments for every mapped user (role + department)"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-1: \"adding a user to a role\" (syncAssignmentsForUser) auto-generates their pending items for already-configured documents"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-1: getMatrix reports assigned/completed/overdue counts per document"
+        }
+      ]
+    },
+    {
+      "id": "TRN-2",
+      "priority": "P0",
+      "description": "Read-and-understood flow: employee opens assigned document, confirms reading, e-signs with meaning \"Trained — read and understood\" (PLT-3). Works on mobile.",
+      "testCount": 10,
+      "tests": [
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-4 TRN-5 Training HTTP surface"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "TRN-2: the operator reads and e-signs \"Trained — read and understood\" to complete it"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "TRN-2: a signing-token-less (session-only) completion attempt is rejected — Iron Rule 4"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-5 TrainingService"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-2: completing an assignment e-signs \"Trained — read and understood\" and marks it completed"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-2: a user cannot complete someone else\\'s training assignment"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-2: an already-completed assignment cannot be completed again"
+        },
+        {
+          "file": "client/src/features/training/pages/my-trainings-page.test.tsx",
+          "kind": "describe",
+          "name": "TRN-2 MyTrainingsPage"
+        },
+        {
+          "file": "client/src/features/training/pages/my-trainings-page.test.tsx",
+          "kind": "it",
+          "name": "TRN-2: shows a pending assignment and completes it with an e-signature (Trained — read and understood)"
+        },
+        {
+          "file": "client/src/features/training/pages/my-trainings-page.test.tsx",
+          "kind": "it",
+          "name": "TRN-2: shows nothing-pending message when there are no open assignments"
+        }
+      ]
+    },
+    {
+      "id": "TRN-3",
+      "priority": "P0",
+      "description": "New effective version of a document auto-triggers retraining for all mapped users; their status flips to \"Training due\".",
+      "testCount": 5,
+      "tests": [
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-4 TRN-5 Training HTTP surface"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "TRN-3: a new Effective version (v2.0) flips the completed assignment back to a fresh pending task"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-5 TrainingService"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-3: a new Effective version retargets an OPEN pending assignment in place — no duplicate row"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-3: \"status flips to training due\" — a user already COMPLETED on the old version gets a fresh PENDING row for the new version"
+        }
+      ]
+    },
+    {
+      "id": "TRN-4",
+      "priority": "P0",
+      "description": "Per-employee training record (exportable PDF): all completed trainings with signatures; the first thing auditors ask for.",
+      "testCount": 3,
+      "tests": [
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-4 TRN-5 Training HTTP surface"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "TRN-4: the employee record (JSON + PDF) is reachable by the employee themself and shows the full history"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "TRN-4: another operator cannot view this employee\\'s record without training:view"
+        }
+      ]
+    },
+    {
+      "id": "TRN-5",
+      "priority": "P0",
+      "description": "Overdue tracking: configurable grace period; overdue list on QA dashboard; notifications to employee + department head.",
+      "testCount": 11,
+      "tests": [
+        {
+          "file": "server/src/modules/training/tests/training-overdue.scanner.spec.ts",
+          "kind": "describe",
+          "name": "TRN-5 training-overdue due-date scanner"
+        },
+        {
+          "file": "server/src/modules/training/tests/training-overdue.scanner.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: registers under a stable key"
+        },
+        {
+          "file": "server/src/modules/training/tests/training-overdue.scanner.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: an overdue assignment notifies BOTH the employee and their department head"
+        },
+        {
+          "file": "server/src/modules/training/tests/training-overdue.scanner.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: no department (or no head configured) produces only the employee finding"
+        },
+        {
+          "file": "server/src/modules/training/tests/training-overdue.scanner.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: a department head who IS the overdue employee is not double-notified"
+        },
+        {
+          "file": "server/src/modules/training/tests/training-overdue.scanner.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: no overdue assignments produces no findings (and skips the user/department lookups)"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-4 TRN-5 Training HTTP surface"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "describe",
+          "name": "TRN-1 TRN-2 TRN-3 TRN-5 TrainingService"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: listOverdue only returns PENDING assignments past the tenant grace period"
+        },
+        {
+          "file": "server/src/modules/training/tests/training.service.spec.ts",
+          "kind": "it",
+          "name": "TRN-5: an assignment still within the grace period is not overdue"
+        },
+        {
+          "file": "client/src/features/dashboard/pages/qa-home-page.test.tsx",
+          "kind": "it",
+          "name": "EQP-4/TRN-5/DOC-6: shows overdue calibrations (filtered from due_soon+overdue), training overdue, and review-due widgets when permitted"
+        }
+      ]
+    },
+    {
+      "id": "DOC-8",
+      "priority": "P1",
+      "description": "Change-summary field mandatory on every new version (what changed and why) — displays in version history.",
+      "testCount": 4,
+      "tests": [
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "describe",
+          "name": "DOC-1 DOC-2 DOC-8 Documents HTTP surface"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-8: creating a new version without a change summary is rejected at the edge"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "describe",
+          "name": "DOC-1 DOC-2 DOC-8 DocumentsService"
+        },
+        {
+          "file": "server/src/modules/documents/tests/documents.service.spec.ts",
+          "kind": "it",
+          "name": "DOC-8: a new version without a change summary is rejected"
+        }
+      ]
+    },
+    {
+      "id": "DOC-9",
+      "priority": "P1",
+      "description": "Document distribution list: which departments/roles must be trained on this document (feeds TRN module).",
+      "testCount": 1,
+      "tests": [
+        {
+          "file": "server/src/modules/training/tests/training.e2e-spec.ts",
+          "kind": "it",
+          "name": "DOC-9 + TRN-1: setting a document\\'s distribution to a role auto-generates a pending assignment once it is Effective"
+        }
+      ]
+    },
+    {
+      "id": "EQP-10",
+      "priority": "P1",
+      "description": "Equipment history report (PDF): full lifecycle — qualification, all calibrations, PMs, breakdowns, logbook — the \"show me everything about this machine\" audit answer.",
+      "testCount": 7,
+      "tests": [
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history-report.service.spec.ts",
+          "kind": "describe",
+          "name": "EQP-10 EquipmentHistoryReportService"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history-report.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-10: aggregates qualification, calibration, PM, logbook, and maintenance data for one equipment"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history-report.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-10: an equipment with nothing recorded yet still produces a well-formed (empty) report"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history-report.service.spec.ts",
+          "kind": "it",
+          "name": "EQP-10: generates a real PDF buffer"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history.e2e-spec.ts",
+          "kind": "describe",
+          "name": "EQP-10 Equipment History Report HTTP surface"
+        },
+        {
+          "file": "server/src/modules/equipment/tests/equipment-history.e2e-spec.ts",
+          "kind": "it",
+          "name": "EQP-10: downloads a real PDF for an equipment with no history yet"
+        },
+        {
+          "file": "client/src/features/equipment/pages/equipment-detail-page.test.tsx",
+          "kind": "it",
+          "name": "EQP-1/EQP-10: shows equipment metadata, HistoryTab, transitions status through the allowed map, and downloads the history report"
+        }
+      ]
+    },
+    {
+      "id": "EQP-11",
+      "priority": "P1",
+      "description": "External calibration agency management: agency master, certificate registry, agency-wise due list.",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "QRX-1",
+      "priority": "P1",
+      "description": "Room/area master with QR: scan → cleaning status (last cleaned, by whom, due), log cleaning entry (same pattern as EQP-6).",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "QRX-2",
+      "priority": "P1",
+      "description": "Material status QR label: generated against a material/lot entry with status Quarantine/Approved/Rejected; scan shows status + QA sign-off details. **View + status-change by QA only. No quantities. No movement.** (See Non-Goals.)",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "TRN-6",
+      "priority": "P1",
+      "description": "Assessments: optional MCQ quiz per document; pass mark configurable; failed = retrain.",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "TRN-7",
+      "priority": "P1",
+      "description": "Classroom/external training records: manual entry with certificate upload (inductions, external GMP trainings).",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "DOC-10",
+      "priority": "P2",
+      "description": "In-app editor / templates. v1 = file upload only.",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "EQP-12",
+      "priority": "P2",
+      "description": "Spare-parts linkage; utilization analytics.",
+      "testCount": 0,
+      "tests": []
+    },
+    {
+      "id": "TRN-8",
+      "priority": "P2",
+      "description": "Trainer-led sessions with attendance capture via QR (attendee scans session QR to mark presence).",
+      "testCount": 0,
+      "tests": []
+    }
+  ],
+  "unknownIds": [
+    "EQP-0042",
+    "PLT-0",
+    "QA-001",
+    "SHA-256",
+    "TR-0001",
+    "TRN-2026"
+  ]
+}

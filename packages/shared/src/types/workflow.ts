@@ -34,7 +34,10 @@ export interface WorkflowInstanceData {
   totalSteps: number;
 }
 
-// PLT-4: emitted on every step change — no listeners yet (PLT-6 Notifications will subscribe).
+// PLT-4: emitted on every step/assignee change; PLT-6 Notifications subscribes to fan events
+// out into the per-user notification log.
+export const WORKFLOW_STEP_CHANGED_EVENT = 'workflow.step-changed';
+
 export interface WorkflowStepChangedEvent {
   tenantId: string;
   entityType: string;
@@ -48,4 +51,11 @@ export interface WorkflowStepChangedEvent {
   actorId: string;
   actorFullName: string;
   comment: string | null;
+  // PLT-6: recipient resolution — the role eligible for the now-current step (null when the
+  // instance left IN_PROGRESS), its display name, and the specific user when reassigned.
+  toStepRoleId: string | null;
+  toStepName: string | null;
+  overrideAssigneeUserId: string | null;
+  // PLT-6: the author who submitted the instance — recipient of approved/rejected outcomes.
+  submittedByUserId: string | null;
 }

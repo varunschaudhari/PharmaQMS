@@ -4,6 +4,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import {
   AuditAction,
   ErrorCode,
+  WORKFLOW_STEP_CHANGED_EVENT,
   WorkflowAction,
   WorkflowInstanceStatus,
   assertWorkflowActionAllowed,
@@ -101,6 +102,7 @@ export class WorkflowService {
     tenantId: string,
     entityType: string,
     entityId: string,
+    actor: WorkflowActor,
   ): Promise<{ before: Record<string, unknown> | null; after: WorkflowInstanceData }> {
     const template = await this.findTemplateForEntityTypeOrThrow(tenantId, entityType);
     if (template.steps.length === 0) {
@@ -129,18 +131,39 @@ export class WorkflowService {
 
     assertWorkflowActionAllowed(instance.status, WorkflowAction.SUBMIT);
 
+    const fromStatus = instance.status;
+    const fromStepIndex = instance.currentStepIndex;
     const firstStep = template.steps[0];
     instance.status = WorkflowInstanceStatus.IN_PROGRESS;
     instance.currentStepIndex = 0;
     instance.currentStepRoleId = firstStep.roleId.toString();
     instance.overrideAssigneeUserId = null;
+    // PLT-6: remember the author so approved/rejected outcomes can be routed back to them.
+    instance.submittedByUserId = actor.userId;
     await instance.save();
+
+    this.emitStepChanged(instance, template, WorkflowAction.SUBMIT, fromStatus, fromStepIndex, actor, null);
 
     return { before, after: toInstanceData(instance, template) };
   }
 
   async getInstance(tenantId: string, instanceId: string): Promise<WorkflowInstanceData> {
     const instance = await this.findInstanceOrThrow(tenantId, instanceId);
+    const template = await this.findTemplateByIdOrThrow(tenantId, instance.templateId.toString());
+    return toInstanceData(instance, template);
+  }
+
+  // Read-time join for entity detail pages — the workflow instance is the approval-state
+  // authority; business entities never denormalize it.
+  async findInstanceForEntity(
+    tenantId: string,
+    entityType: string,
+    entityId: string,
+  ): Promise<WorkflowInstanceData | null> {
+    const instance = await this.instanceModel.findOne({ tenantId, entityType, entityId });
+    if (!instance) {
+      return null;
+    }
     const template = await this.findTemplateByIdOrThrow(tenantId, instance.templateId.toString());
     return toInstanceData(instance, template);
   }
@@ -178,7 +201,7 @@ export class WorkflowService {
       return this.reject(instance, template, actor, dto.comment);
     }
     if (dto.action === WorkflowAction.REASSIGN) {
-      return this.reassign(tenantId, instance, template, dto.userId, dto.reason);
+      return this.reassign(tenantId, instance, template, actor, dto.userId, dto.reason);
     }
     return this.approve(instance, template, actor, dto.signingToken, dto.entitySnapshot, dto.comment ?? null);
   }
@@ -223,7 +246,7 @@ export class WorkflowService {
     instance.overrideAssigneeUserId = null;
     await instance.save();
 
-    this.emitStepChanged(instance, WorkflowAction.APPROVE, before.status as WorkflowInstanceStatus, fromStepIndex, actor, comment);
+    this.emitStepChanged(instance, template, WorkflowAction.APPROVE, before.status as WorkflowInstanceStatus, fromStepIndex, actor, comment);
 
     return {
       before,
@@ -258,7 +281,7 @@ export class WorkflowService {
     instance.overrideAssigneeUserId = null;
     await instance.save();
 
-    this.emitStepChanged(instance, WorkflowAction.REJECT, before.status as WorkflowInstanceStatus, fromStepIndex, actor, comment);
+    this.emitStepChanged(instance, template, WorkflowAction.REJECT, before.status as WorkflowInstanceStatus, fromStepIndex, actor, comment);
 
     return {
       before,
@@ -272,6 +295,7 @@ export class WorkflowService {
     tenantId: string,
     instance: WorkflowInstanceDocument,
     template: WorkflowTemplateDocument,
+    actor: WorkflowActor,
     targetUserId: string,
     reason: string,
   ) {
@@ -285,6 +309,18 @@ export class WorkflowService {
     const before = instanceSnapshot(instance);
     instance.overrideAssigneeUserId = targetUserId;
     await instance.save();
+
+    // PLT-6: reassignment is an assignee change, not a step change — but the substitute still
+    // needs a task-assigned notification, so it goes through the same event channel.
+    this.emitStepChanged(
+      instance,
+      template,
+      WorkflowAction.REASSIGN,
+      before.status as WorkflowInstanceStatus,
+      instance.currentStepIndex,
+      actor,
+      reason,
+    );
 
     return {
       before,
@@ -363,12 +399,20 @@ export class WorkflowService {
 
   private emitStepChanged(
     instance: WorkflowInstanceDocument,
+    template: WorkflowTemplateDocument,
     action: WorkflowAction,
     fromStatus: WorkflowInstanceStatus,
     fromStepIndex: number,
     actor: WorkflowActor,
     comment: string | null,
   ): void {
+    // PLT-6: resolve the now-current step so the notification listener can fan task-assigned
+    // notifications out to that step's role without re-fetching the template.
+    const toStep =
+      instance.status === WorkflowInstanceStatus.IN_PROGRESS
+        ? (template.steps[instance.currentStepIndex] ?? null)
+        : null;
+
     const event: WorkflowStepChangedEvent = {
       tenantId: instance.tenantId.toString(),
       entityType: instance.entityType,
@@ -382,9 +426,12 @@ export class WorkflowService {
       actorId: actor.userId,
       actorFullName: actor.fullName,
       comment,
+      toStepRoleId: toStep ? toStep.roleId.toString() : null,
+      toStepName: toStep ? toStep.name : null,
+      overrideAssigneeUserId: instance.overrideAssigneeUserId,
+      submittedByUserId: instance.submittedByUserId,
     };
-    // PLT-6 (Notifications) will subscribe to this later — no listeners yet.
-    this.eventEmitter.emit('workflow.step-changed', event);
+    this.eventEmitter.emit(WORKFLOW_STEP_CHANGED_EVENT, event);
   }
 }
 

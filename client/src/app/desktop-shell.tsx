@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { NavLink } from 'react-router-dom';
+import { NotificationBell } from '../components/ui/notification-bell';
 import { useAuth } from '../features/auth/context/auth-context';
 
 const navLinkClass = ({ isActive }: { isActive: boolean }) =>
@@ -16,8 +17,35 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           <NavLink to="/" end className={navLinkClass}>
             Home
           </NavLink>
+          <NavLink to="/documents" end className={navLinkClass}>
+            Documents
+          </NavLink>
+          <NavLink to="/equipment" end className={navLinkClass}>
+            Equipment
+          </NavLink>
+          <NavLink to="/equipment/calibration/due" className={navLinkClass}>
+            Calibration Due
+          </NavLink>
+          <NavLink to="/equipment/maintenance-tasks" className={navLinkClass}>
+            Maintenance Queue
+          </NavLink>
+          <NavLink to="/equipment/pm-tasks" className={navLinkClass}>
+            PM Queue
+          </NavLink>
+          <NavLink to="/documents/review-due" className={navLinkClass}>
+            Review Due
+          </NavLink>
+          <NavLink to="/training/my-assignments" className={navLinkClass}>
+            My Trainings
+          </NavLink>
+          <NavLink to="/training/matrix" className={navLinkClass}>
+            Training Matrix
+          </NavLink>
           <NavLink to="/workflow/pending-tasks" className={navLinkClass}>
             Pending Tasks
+          </NavLink>
+          <NavLink to="/test-records" className={navLinkClass}>
+            Test Records
           </NavLink>
           <NavLink to="/admin/departments" className={navLinkClass}>
             Departments
@@ -33,6 +61,7 @@ export function DesktopShell({ children }: { children: ReactNode }) {
               Tenants
             </NavLink>
           )}
+          <NotificationBell />
         </nav>
       </header>
       <main className="p-6">{children}</main>

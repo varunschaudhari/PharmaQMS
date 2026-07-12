@@ -1,12 +1,15 @@
 import { HttpStatus, Inject, Injectable } from '@nestjs/common';
 import { ConfigType } from '@nestjs/config';
+import { EventEmitter2 } from '@nestjs/event-emitter';
 import { InjectModel } from '@nestjs/mongoose';
 import {
   ErrorCode,
+  USER_ROLE_ASSIGNED_EVENT,
   buildPasswordComplexitySchema,
   type PaginationMeta,
   type RoleSummary,
   type UserAdminData,
+  type UserRoleAssignedEvent,
 } from '@pharmaqms/shared';
 import { Model } from 'mongoose';
 import { AppException } from '../../common/exceptions/app.exception';
@@ -37,6 +40,7 @@ export class UserAdminService {
     @InjectModel(User.name) private readonly userModel: Model<UserDocument>,
     @InjectModel(Role.name) private readonly roleModel: Model<RoleDocument>,
     @Inject(authConfig.KEY) private readonly config: ConfigType<typeof authConfig>,
+    private readonly eventEmitter: EventEmitter2,
   ) {}
 
   async createUser(input: CreateUserInput): Promise<UserAdminData> {
@@ -68,6 +72,10 @@ export class UserAdminService {
       roleId: input.roleId,
       departmentId: input.departmentId ?? null,
     });
+
+    // TRN-1: "adding a user to a role auto-generates their pending training items."
+    this.emitRoleAssigned(input.tenantId, doc);
+
     return toUserAdminData(doc);
   }
 
@@ -81,6 +89,8 @@ export class UserAdminService {
       throw new AppException(ErrorCode.NOT_FOUND, 'User not found.', HttpStatus.NOT_FOUND);
     }
     const before = userSnapshot(user);
+    const previousRoleId = user.roleId.toString();
+    const previousDepartmentId = user.departmentId ? user.departmentId.toString() : null;
 
     if (input.fullName !== undefined) user.fullName = input.fullName;
     if (input.roleId !== undefined) {
@@ -103,7 +113,26 @@ export class UserAdminService {
     }
     await user.save();
 
+    // TRN-1: retrigger the training-assignment sync only when the role/department actually
+    // changed — a plain rename or reactivation shouldn't re-scan every document's distribution.
+    const roleOrDepartmentChanged =
+      user.roleId.toString() !== previousRoleId ||
+      (user.departmentId ? user.departmentId.toString() : null) !== previousDepartmentId;
+    if (roleOrDepartmentChanged) {
+      this.emitRoleAssigned(tenantId, user);
+    }
+
     return { before, after: toUserAdminData(user) };
+  }
+
+  private emitRoleAssigned(tenantId: string, user: UserDocument): void {
+    const event: UserRoleAssignedEvent = {
+      tenantId,
+      userId: user._id.toString(),
+      roleId: user.roleId.toString(),
+      departmentId: user.departmentId ? user.departmentId.toString() : null,
+    };
+    this.eventEmitter.emit(USER_ROLE_ASSIGNED_EVENT, event);
   }
 
   async listUsers(

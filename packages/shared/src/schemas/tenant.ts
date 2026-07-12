@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { CredentialType } from '../enums/credential-type';
+import { NotificationEmailMode } from '../enums/notification-email-mode';
 
 const tenantSettingsSchema = z.object({
   timezone: z.string().min(1).default('Asia/Kolkata'),
@@ -7,6 +8,16 @@ const tenantSettingsSchema = z.object({
   accessTokenTtlMinutes: z.coerce.number().int().min(1).default(15),
   refreshTokenTtlHoursDefault: z.coerce.number().int().min(1).default(12),
   refreshTokenTtlDaysRemembered: z.coerce.number().int().min(1).default(30),
+  // PLT-6: digest option per tenant.
+  notificationEmailMode: z.nativeEnum(NotificationEmailMode).default(NotificationEmailMode.IMMEDIATE),
+  // TRN-5: default grace period chosen to match a typical GMP SOP read-and-understood window.
+  trainingGracePeriodDays: z.coerce.number().int().min(1).default(7),
+  // EQP-4: default true — a GxP system should default to the safer, blocking behavior.
+  blockUsageWhenCalibrationOverdue: z.coerce.boolean().default(true),
+  // EQP-7: null until the tenant designates a maintenance Role.
+  maintenanceRoleId: z.string().min(1).nullable().default(null),
+  // EQP-7: default true — the safer GxP default, matching blockUsageWhenCalibrationOverdue.
+  requireMaintenanceVerification: z.coerce.boolean().default(true),
 });
 export type TenantSettingsInput = z.infer<typeof tenantSettingsSchema>;
 
@@ -43,6 +54,7 @@ export type CreateDepartmentRequest = z.infer<typeof createDepartmentRequestSche
 
 export const updateDepartmentRequestSchema = z.object({
   name: z.string().min(1).optional(),
+  headUserId: z.string().min(1).nullable().optional(),
   isActive: z.boolean().optional(),
 });
 export type UpdateDepartmentRequest = z.infer<typeof updateDepartmentRequestSchema>;

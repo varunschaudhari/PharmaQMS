@@ -14,6 +14,11 @@ export interface UpdateTenantSettingsInput {
   accessTokenTtlMinutes?: number;
   refreshTokenTtlHoursDefault?: number;
   refreshTokenTtlDaysRemembered?: number;
+  notificationEmailMode?: string;
+  trainingGracePeriodDays?: number;
+  blockUsageWhenCalibrationOverdue?: boolean;
+  maintenanceRoleId?: string | null;
+  requireMaintenanceVerification?: boolean;
 }
 
 @Injectable()
@@ -84,6 +89,11 @@ export class TenantService {
       accessTokenTtlMinutes: tenant.settings.accessTokenTtlMinutes,
       refreshTokenTtlHoursDefault: tenant.settings.refreshTokenTtlHoursDefault,
       refreshTokenTtlDaysRemembered: tenant.settings.refreshTokenTtlDaysRemembered,
+      notificationEmailMode: tenant.settings.notificationEmailMode,
+      trainingGracePeriodDays: tenant.settings.trainingGracePeriodDays,
+      blockUsageWhenCalibrationOverdue: tenant.settings.blockUsageWhenCalibrationOverdue,
+      maintenanceRoleId: tenant.settings.maintenanceRoleId,
+      requireMaintenanceVerification: tenant.settings.requireMaintenanceVerification,
     };
 
     Object.assign(tenant.settings, settings);
@@ -97,7 +107,18 @@ function toTenantData(doc: {
   _id: unknown;
   name: string;
   slug: string;
-  settings: { timezone: string; signatureCredentialType: string; accessTokenTtlMinutes: number; refreshTokenTtlHoursDefault: number; refreshTokenTtlDaysRemembered: number };
+  settings: {
+    timezone: string;
+    signatureCredentialType: string;
+    accessTokenTtlMinutes: number;
+    refreshTokenTtlHoursDefault: number;
+    refreshTokenTtlDaysRemembered: number;
+    notificationEmailMode: string;
+    trainingGracePeriodDays: number;
+    blockUsageWhenCalibrationOverdue: boolean;
+    maintenanceRoleId: string | null;
+    requireMaintenanceVerification: boolean;
+  };
   isActive: boolean;
 }): TenantData {
   return {
@@ -110,6 +131,11 @@ function toTenantData(doc: {
       accessTokenTtlMinutes: doc.settings.accessTokenTtlMinutes,
       refreshTokenTtlHoursDefault: doc.settings.refreshTokenTtlHoursDefault,
       refreshTokenTtlDaysRemembered: doc.settings.refreshTokenTtlDaysRemembered,
+      notificationEmailMode: doc.settings.notificationEmailMode as TenantData['settings']['notificationEmailMode'],
+      trainingGracePeriodDays: doc.settings.trainingGracePeriodDays,
+      blockUsageWhenCalibrationOverdue: doc.settings.blockUsageWhenCalibrationOverdue,
+      maintenanceRoleId: doc.settings.maintenanceRoleId,
+      requireMaintenanceVerification: doc.settings.requireMaintenanceVerification,
     },
     isActive: doc.isActive,
   };
