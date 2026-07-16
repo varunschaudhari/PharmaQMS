@@ -11,13 +11,14 @@ import {
   redisConnectionOptions,
   type NotificationsConfig,
 } from './config/notifications.config';
+import { whatsappConfig, type WhatsAppConfig } from './config/whatsapp.config';
 import { DueDateScanService } from './due-date/due-date-scan.service';
 import { DueDateScannerRegistry } from './due-date/due-date-scanner.registry';
 import { EmailDeliveryService } from './email-delivery.service';
 import { BullNotificationJobs } from './jobs/bull-notification-jobs';
 import { NoopNotificationJobs } from './jobs/noop-notification-jobs';
-import { DAILY_QUEUE, EMAIL_QUEUE, NOTIFICATION_JOBS } from './jobs/notification-jobs.interface';
-import { DailyQueueProcessor, EmailQueueProcessor } from './jobs/notification-queue.processors';
+import { DAILY_QUEUE, EMAIL_QUEUE, NOTIFICATION_JOBS, WHATSAPP_QUEUE } from './jobs/notification-jobs.interface';
+import { DailyQueueProcessor, EmailQueueProcessor, WhatsAppQueueProcessor } from './jobs/notification-queue.processors';
 import { ConsoleMailer } from './mailer/console-mailer';
 import { FileMailer } from './mailer/file-mailer';
 import { MAILER } from './mailer/mailer.interface';
@@ -25,6 +26,12 @@ import { NotificationsController } from './notifications.controller';
 import { NotificationsService } from './notifications.service';
 import { DueDateScanRun, DueDateScanRunSchema } from './schemas/due-date-scan-run.schema';
 import { Notification, NotificationSchema } from './schemas/notification.schema';
+import { ConsoleWhatsAppProvider } from './whatsapp/console-whatsapp-provider';
+import { FileWhatsAppProvider } from './whatsapp/file-whatsapp-provider';
+import { MetaWhatsAppProvider } from './whatsapp/meta-whatsapp-provider';
+import { WHATSAPP_PROVIDER } from './whatsapp/whatsapp-provider.interface';
+import { WhatsAppWebhookController } from './whatsapp/whatsapp-webhook.controller';
+import { WhatsAppDeliveryService } from './whatsapp-delivery.service';
 import { WorkflowNotificationListener } from './workflow-notification.listener';
 
 // PLT-6: composed dynamically so BullMQ (and therefore Redis) is only wired when jobs are
@@ -38,7 +45,7 @@ export class NotificationsModule {
     const bullImports = enabled
       ? [
           BullModule.forRoot({ connection: redisConnectionOptions() }),
-          BullModule.registerQueue({ name: EMAIL_QUEUE }, { name: DAILY_QUEUE }),
+          BullModule.registerQueue({ name: EMAIL_QUEUE }, { name: DAILY_QUEUE }, { name: WHATSAPP_QUEUE }),
         ]
       : [];
 
@@ -48,6 +55,7 @@ export class NotificationsModule {
           { provide: NOTIFICATION_JOBS, useExisting: BullNotificationJobs },
           EmailQueueProcessor,
           DailyQueueProcessor,
+          WhatsAppQueueProcessor,
         ]
       : [{ provide: NOTIFICATION_JOBS, useClass: NoopNotificationJobs }];
 
@@ -58,6 +66,7 @@ export class NotificationsModule {
       global: true,
       imports: [
         ConfigModule.forFeature(notificationsConfig),
+        ConfigModule.forFeature(whatsappConfig),
         MongooseModule.forFeature([
           { name: Notification.name, schema: NotificationSchema },
           { name: DueDateScanRun.name, schema: DueDateScanRunSchema },
@@ -70,7 +79,7 @@ export class NotificationsModule {
         AuditModule,
         ...bullImports,
       ],
-      controllers: [NotificationsController],
+      controllers: [NotificationsController, WhatsAppWebhookController],
       providers: [
         {
           provide: MAILER,
@@ -78,14 +87,34 @@ export class NotificationsModule {
           useFactory: (config: NotificationsConfig) =>
             config.mailTransport === 'file' ? new FileMailer(config.mailOutboxPath) : new ConsoleMailer(),
         },
+        {
+          provide: WHATSAPP_PROVIDER,
+          inject: [whatsappConfig.KEY],
+          useFactory: (config: WhatsAppConfig) => {
+            if (config.transport === 'meta') {
+              if (!config.phoneNumberId || !config.accessToken) {
+                throw new Error(
+                  'WHATSAPP_TRANSPORT=meta requires WHATSAPP_PHONE_NUMBER_ID and WHATSAPP_ACCESS_TOKEN to be set.',
+                );
+              }
+              return new MetaWhatsAppProvider({
+                apiBaseUrl: config.apiBaseUrl,
+                phoneNumberId: config.phoneNumberId,
+                accessToken: config.accessToken,
+              });
+            }
+            return config.transport === 'file' ? new FileWhatsAppProvider(config.outboxPath) : new ConsoleWhatsAppProvider();
+          },
+        },
         NotificationsService,
         EmailDeliveryService,
+        WhatsAppDeliveryService,
         WorkflowNotificationListener,
         DueDateScannerRegistry,
         DueDateScanService,
         ...jobProviders,
       ],
-      exports: [NotificationsService, DueDateScannerRegistry, DueDateScanService, EmailDeliveryService],
+      exports: [NotificationsService, DueDateScannerRegistry, DueDateScanService, EmailDeliveryService, WhatsAppDeliveryService],
     };
   }
 }

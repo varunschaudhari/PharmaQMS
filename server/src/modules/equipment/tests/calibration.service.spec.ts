@@ -30,6 +30,7 @@ import { Department, DepartmentDocument, DepartmentSchema } from '../../../platf
 import { Tenant, TenantDocument, TenantSchema } from '../../../platform/tenant/schemas/tenant.schema';
 import { CalibrationService } from '../calibration.service';
 import { EquipmentService } from '../equipment.service';
+import { CalibrationAgency, CalibrationAgencySchema } from '../schemas/calibration-agency.schema';
 import { CalibrationRecord, CalibrationRecordDocument, CalibrationRecordSchema } from '../schemas/calibration-record.schema';
 import { CalibrationSchedule, CalibrationScheduleDocument, CalibrationScheduleSchema } from '../schemas/calibration-schedule.schema';
 import { Equipment, EquipmentSchema } from '../schemas/equipment.schema';
@@ -85,6 +86,7 @@ describe('EQP-4 EQP-5 CalibrationService', () => {
           { name: AuditEvent.name, schema: AuditEventSchema },
           { name: Signature.name, schema: SignatureSchema },
           { name: SigningTokenUsage.name, schema: SigningTokenUsageSchema },
+          { name: CalibrationAgency.name, schema: CalibrationAgencySchema },
         ]),
       ],
       providers: [

@@ -19,6 +19,8 @@ export interface UpdateTenantSettingsInput {
   blockUsageWhenCalibrationOverdue?: boolean;
   maintenanceRoleId?: string | null;
   requireMaintenanceVerification?: boolean;
+  notificationChannels?: string[];
+  whatsappTemplateNames?: Partial<Record<string, string>>;
 }
 
 @Injectable()
@@ -94,6 +96,8 @@ export class TenantService {
       blockUsageWhenCalibrationOverdue: tenant.settings.blockUsageWhenCalibrationOverdue,
       maintenanceRoleId: tenant.settings.maintenanceRoleId,
       requireMaintenanceVerification: tenant.settings.requireMaintenanceVerification,
+      notificationChannels: tenant.settings.notificationChannels,
+      whatsappTemplateNames: tenant.settings.whatsappTemplateNames,
     };
 
     Object.assign(tenant.settings, settings);
@@ -118,6 +122,8 @@ function toTenantData(doc: {
     blockUsageWhenCalibrationOverdue: boolean;
     maintenanceRoleId: string | null;
     requireMaintenanceVerification: boolean;
+    notificationChannels: string[];
+    whatsappTemplateNames: Partial<Record<string, string>>;
   };
   isActive: boolean;
 }): TenantData {
@@ -136,6 +142,8 @@ function toTenantData(doc: {
       blockUsageWhenCalibrationOverdue: doc.settings.blockUsageWhenCalibrationOverdue,
       maintenanceRoleId: doc.settings.maintenanceRoleId,
       requireMaintenanceVerification: doc.settings.requireMaintenanceVerification,
+      notificationChannels: doc.settings.notificationChannels as TenantData['settings']['notificationChannels'],
+      whatsappTemplateNames: doc.settings.whatsappTemplateNames as TenantData['settings']['whatsappTemplateNames'],
     },
     isActive: doc.isActive,
   };

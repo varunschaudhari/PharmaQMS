@@ -13,6 +13,12 @@ vi.mock('../../../lib/training-api', () => ({ fetchMyTrainingAssignments, comple
 const { challengeSignature } = vi.hoisted(() => ({ challengeSignature: vi.fn() }));
 vi.mock('../../../lib/esign-api', () => ({ challengeSignature }));
 
+const { fetchTrainingAssessmentForTrainee, submitTrainingAssessmentAttempt } = vi.hoisted(() => ({
+  fetchTrainingAssessmentForTrainee: vi.fn(),
+  submitTrainingAssessmentAttempt: vi.fn(),
+}));
+vi.mock('../../../lib/training-assessment-api', () => ({ fetchTrainingAssessmentForTrainee, submitTrainingAssessmentAttempt }));
+
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
@@ -64,5 +70,49 @@ describe('TRN-2 MyTrainingsPage', () => {
     fetchMyTrainingAssignments.mockResolvedValue([]);
     renderPage();
     await waitFor(() => expect(screen.getByText(/nothing pending/i)).toBeInTheDocument());
+  });
+
+  it('TRN-6: an assignment with an unpassed assessment shows "Take assessment" instead of the sign button, and passing unlocks signing', async () => {
+    const user = userEvent.setup();
+    fetchMyTrainingAssignments.mockResolvedValue([
+      {
+        id: 'assign-2',
+        tenantId: 't1',
+        userId: 'u1',
+        userFullName: 'Olive Operator',
+        documentId: 'doc-1',
+        docNumber: 'SOP-QA-002',
+        documentTitle: 'Gowning procedure',
+        versionId: 'ver-1',
+        versionLabel: '1.0',
+        status: 'pending',
+        assignedAt: '2026-07-01T00:00:00.000Z',
+        dueDate: '2026-07-08T00:00:00.000Z',
+        isOverdue: false,
+        completedAt: null,
+        assessment: { assessmentId: 'assess-1', attemptCount: 0, bestScorePercentage: null, passed: false, maxAttemptsReached: false },
+      },
+    ]);
+    fetchTrainingAssessmentForTrainee.mockResolvedValue({
+      assessmentId: 'assess-1',
+      passMarkPercentage: 80,
+      questions: [{ id: 'q1', questionText: 'What PPE is required?', options: ['Gown', 'None'] }],
+    });
+    submitTrainingAssessmentAttempt.mockResolvedValue({
+      attempt: { id: 'att-1', tenantId: 't1', assignmentId: 'assign-2', assessmentId: 'assess-1', userId: 'u1', attemptNumber: 1, answers: [], scorePercentage: 100, passed: true, occurredAt: '2026-07-11T00:00:00.000Z' },
+      attemptsRemaining: 2,
+      maxAttemptsReached: false,
+    });
+
+    renderPage();
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Take assessment' })).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /i have read and understood/i })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'Take assessment' }));
+    await waitFor(() => expect(screen.getByText(/What PPE is required\?/)).toBeInTheDocument());
+    await user.click(screen.getByLabelText('Gown'));
+    await user.click(screen.getByRole('button', { name: 'Submit' }));
+
+    await waitFor(() => expect(submitTrainingAssessmentAttempt).toHaveBeenCalledWith('assign-2', { answers: [{ questionId: 'q1', selectedOptionIndex: 0 }] }));
   });
 });

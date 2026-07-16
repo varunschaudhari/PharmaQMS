@@ -5,6 +5,8 @@ import { useAuth } from '../../features/auth/context/auth-context';
 import { extractErrorMessage } from '../../lib/api-error';
 import { checkDocVersion, resolveQrCode } from '../../lib/qr-api';
 import { EquipmentStatusCard } from '../components/equipment-status-card';
+import { MaterialLotStatusCard } from '../components/material-lot-status-card';
+import { RoomStatusCard } from '../components/room-status-card';
 import { MobileShell } from '../mobile-shell';
 
 // PLT-7 / DOC-5: /s/:code — the scan landing router. Printed controlled-copy codes resolve to
@@ -118,6 +120,16 @@ function ResolvedEntity({ code }: { code: string }) {
   // generic stub until its own module lands.
   if (data.entityType === 'Equipment') {
     return <EquipmentStatusCard equipmentId={data.entityId} />;
+  }
+
+  // QRX-1: room scans render the cleaning status card.
+  if (data.entityType === 'Room') {
+    return <RoomStatusCard roomId={data.entityId} />;
+  }
+
+  // QRX-2: material lot scans render the status-verification card.
+  if (data.entityType === 'MaterialLot') {
+    return <MaterialLotStatusCard lotId={data.entityId} />;
   }
 
   return (

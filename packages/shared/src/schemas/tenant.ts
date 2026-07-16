@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import { CredentialType } from '../enums/credential-type';
+import { NotificationChannel } from '../enums/notification-channel';
 import { NotificationEmailMode } from '../enums/notification-email-mode';
+import { WhatsAppTemplateKey } from '../enums/whatsapp-template-key';
 
 const tenantSettingsSchema = z.object({
   timezone: z.string().min(1).default('Asia/Kolkata'),
@@ -18,6 +20,12 @@ const tenantSettingsSchema = z.object({
   maintenanceRoleId: z.string().min(1).nullable().default(null),
   // EQP-7: default true — the safer GxP default, matching blockUsageWhenCalibrationOverdue.
   requireMaintenanceVerification: z.coerce.boolean().default(true),
+  // PLT-6-WA: defaults to email-only — an unconfigured tenant's behavior is unchanged from
+  // before WhatsApp existed.
+  notificationChannels: z.array(z.nativeEnum(NotificationChannel)).min(1).default([NotificationChannel.EMAIL]),
+  // PLT-6-WA: per-tenant Meta template-name overrides, keyed by internal template key. Never a
+  // place for provider credentials (those are env-only — see whatsapp.config.ts).
+  whatsappTemplateNames: z.record(z.nativeEnum(WhatsAppTemplateKey), z.string().min(1)).default({}),
 });
 export type TenantSettingsInput = z.infer<typeof tenantSettingsSchema>;
 
@@ -59,12 +67,19 @@ export const updateDepartmentRequestSchema = z.object({
 });
 export type UpdateDepartmentRequest = z.infer<typeof updateDepartmentRequestSchema>;
 
+// PLT-6-WA: E.164 format (leading +, 8-15 digits total) — the format WhatsApp Cloud API requires.
+const whatsappPhoneNumberSchema = z
+  .string()
+  .regex(/^\+[1-9]\d{7,14}$/, 'whatsappPhoneNumber must be in E.164 format, e.g. +919876543210');
+
 export const createUserRequestSchema = z.object({
   email: z.string().email(),
   fullName: z.string().min(1),
   password: z.string().min(1),
   roleId: z.string().min(1, 'roleId is required'),
   departmentId: z.string().min(1).optional(),
+  whatsappPhoneNumber: whatsappPhoneNumberSchema.nullable().optional(),
+  whatsappOptIn: z.boolean().optional(),
 });
 export type CreateUserRequest = z.infer<typeof createUserRequestSchema>;
 
@@ -73,5 +88,9 @@ export const updateUserRequestSchema = z.object({
   roleId: z.string().min(1).optional(),
   departmentId: z.string().min(1).nullable().optional(),
   isActive: z.boolean().optional(),
+  // PLT-6-WA: per-user opt-in + phone number, audited via the same generic before/after diff as
+  // every other field on this endpoint.
+  whatsappPhoneNumber: whatsappPhoneNumberSchema.nullable().optional(),
+  whatsappOptIn: z.boolean().optional(),
 });
 export type UpdateUserRequest = z.infer<typeof updateUserRequestSchema>;

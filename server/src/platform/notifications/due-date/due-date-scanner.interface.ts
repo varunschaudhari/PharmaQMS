@@ -1,4 +1,4 @@
-import type { NotificationEvent } from '@pharmaqms/shared';
+import type { NotificationEvent, WhatsAppTemplateParams } from '@pharmaqms/shared';
 
 // PLT-6: the due-date scanner contract. Business modules register scanners for their own
 // due-date semantics — DOC-6 periodic document review, TRN-5 overdue training, EQP-4 calibration
@@ -23,6 +23,9 @@ export interface DueDateFinding {
   // Include the due date in the key so a rescheduled item notifies again; include runDate only
   // if the notification should deliberately repeat daily (e.g. an escalating overdue nag).
   dedupeKey: string;
+  // PLT-6-WA: present only for scanners whose finding maps to a WhatsApp template (calibration
+  // due/overdue, training overdue, document review due) — see whatsapp-templates.ts.
+  whatsapp?: WhatsAppTemplateParams | null;
 }
 
 export interface DueDateScanner {

@@ -27,9 +27,18 @@ export class Equipment {
   @Prop({ type: String, default: null, trim: true })
   serialNumber!: string | null;
 
-  // Free-text in v1 — no Room master yet (QRX-1 is v1.5, out of scope for this build phase).
+  // Free-text location, kept for backward compatibility with pre-QRX-1 records that predate the
+  // Room master. New/updated equipment should prefer `roomId` below.
   @Prop({ required: true, trim: true })
   location!: string;
+
+  // QRX-1: opaque reference to a Room — deliberately NOT validated against the Rooms module here
+  // (business modules never depend on each other directly, CLAUDE.md). Same polymorphic-reference
+  // precedent as AuditEvent/Signature/Notification/WorkflowInstance/QrCode's entityType+entityId;
+  // see EquipmentData's header comment in packages/shared for the full rationale. Back-filled for
+  // existing records by scripts/migrate-equipment-rooms.ts.
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'Room', default: null })
+  roomId!: Types.ObjectId | null;
 
   @Prop({ type: SchemaTypes.ObjectId, ref: 'Department', required: true })
   departmentId!: Types.ObjectId;

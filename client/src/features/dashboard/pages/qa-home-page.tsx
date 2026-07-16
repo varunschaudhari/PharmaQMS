@@ -6,6 +6,9 @@ import { useAuth } from '../../auth/context/auth-context';
 import { fetchCalibrationDue } from '../../../lib/equipment-api';
 import { fetchOverdueTraining } from '../../../lib/training-api';
 import { fetchReviewDue } from '../../../lib/documents-api';
+import { fetchCalibrationAgencies } from '../../../lib/calibration-agency-api';
+import { fetchRejectedMaterialLots } from '../../../lib/material-lot-api';
+import { fetchRoomCleaningDue } from '../../../lib/room-api';
 import { fetchMyPendingTasks } from '../../../lib/workflow-api';
 
 const MAX_ROWS = 5;
@@ -51,6 +54,8 @@ export function QaHomePage() {
   const canViewEquipment = permissions.includes('equipment:view');
   const canViewTraining = permissions.includes('training:view');
   const canViewDocuments = permissions.includes('documents:view');
+  const canViewRooms = permissions.includes('rooms:view');
+  const canViewMaterials = permissions.includes('materials:view');
 
   const { data: pendingTasks, isLoading: pendingLoading } = useQuery({
     queryKey: ['my-pending-tasks'],
@@ -75,7 +80,31 @@ export function QaHomePage() {
     enabled: canViewDocuments,
   });
 
+  const { data: roomCleaningDue, isLoading: roomCleaningLoading } = useQuery({
+    queryKey: ['room-cleaning-due'],
+    queryFn: fetchRoomCleaningDue,
+    enabled: canViewRooms,
+  });
+
+  const { data: rejectedLots, isLoading: rejectedLotsLoading } = useQuery({
+    queryKey: ['material-lots-rejected'],
+    queryFn: fetchRejectedMaterialLots,
+    enabled: canViewMaterials,
+  });
+
+  // EQP-11 (d): a warning-only widget — expired accreditation never blocks anything, it's
+  // surfaced here purely so QA notices and follows up with the agency.
+  const { data: calibrationAgencies, isLoading: calibrationAgenciesLoading } = useQuery({
+    queryKey: ['calibration-agencies'],
+    queryFn: fetchCalibrationAgencies,
+    enabled: canViewEquipment,
+  });
+
   const overdueCalibrations = (calibrationDue ?? []).filter((entry) => entry.calibrationStatus === CalibrationStatus.OVERDUE);
+  const overdueRoomCleanings = (roomCleaningDue ?? []).filter((entry) => entry.cleaningStatus === CalibrationStatus.OVERDUE);
+  const expiredAgencies = (calibrationAgencies ?? []).filter(
+    (agency) => agency.accreditationValidUntil !== null && new Date(agency.accreditationValidUntil) < new Date(),
+  );
 
   return (
     <div className="space-y-6">
@@ -147,6 +176,59 @@ export function QaHomePage() {
                   {document.docNumber}
                 </Link>
                 <span className="text-slate-500"> — {document.title}</span>
+              </li>
+            ))}
+          </DashboardCard>
+        )}
+
+        {canViewRooms && (
+          <DashboardCard
+            title="Overdue room cleaning"
+            count={overdueRoomCleanings.length}
+            viewAllTo="/rooms/cleaning/due"
+            emptyLabel={roomCleaningLoading ? 'Loading…' : 'No rooms are overdue for cleaning.'}
+          >
+            {overdueRoomCleanings.slice(0, MAX_ROWS).map((entry) => (
+              <li key={entry.roomId}>
+                <Link to={`/rooms/${entry.roomId}`} className="underline">
+                  {entry.roomCode} — {entry.roomName}
+                </Link>
+                <span className="text-slate-500"> — due {entry.nextDueDate.slice(0, 10)}</span>
+              </li>
+            ))}
+          </DashboardCard>
+        )}
+
+        {canViewMaterials && (
+          <DashboardCard
+            title="Rejected material lots"
+            count={rejectedLots?.length ?? 0}
+            viewAllTo="/materials"
+            emptyLabel={rejectedLotsLoading ? 'Loading…' : 'No rejected material lots.'}
+          >
+            {(rejectedLots ?? []).slice(0, MAX_ROWS).map((entry) => (
+              <li key={entry.lotId}>
+                <Link to={`/materials/${entry.lotId}`} className="underline">
+                  {entry.lotCode} — {entry.materialName}
+                </Link>
+              </li>
+            ))}
+          </DashboardCard>
+        )}
+
+        {canViewEquipment && (
+          <DashboardCard
+            title="Expired agency accreditation"
+            count={expiredAgencies.length}
+            viewAllTo="/equipment/calibration-agencies"
+            emptyLabel={calibrationAgenciesLoading ? 'Loading…' : 'No calibration agency accreditation has expired.'}
+          >
+            {expiredAgencies.slice(0, MAX_ROWS).map((agency) => (
+              <li key={agency.id}>
+                <Link to={`/equipment/calibration-agencies/${agency.id}`} className="underline">
+                  {agency.name}
+                </Link>
+                <span className="text-slate-500"> — expired {agency.accreditationValidUntil!.slice(0, 10)}</span>
               </li>
             ))}
           </DashboardCard>

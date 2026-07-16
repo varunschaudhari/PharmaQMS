@@ -10,4 +10,8 @@ export class NoopNotificationJobs implements NotificationJobs {
   enqueueEmail(notificationId: string): void {
     this.logger.debug(`Jobs disabled — skipping email enqueue for notification ${notificationId}`);
   }
+
+  enqueueWhatsApp(notificationId: string): void {
+    this.logger.debug(`Jobs disabled — skipping WhatsApp enqueue for notification ${notificationId}`);
+  }
 }

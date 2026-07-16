@@ -10,6 +10,8 @@
   ],
   "scripts": {
     "dev": "concurrently -n server,client -c blue,green \"npm run dev -w server\" \"npm run dev -w client\"",
+    "seed": "npm run build -w @pharmaqms/shared && npm run seed -w server",
+    "migrate:equipment-rooms": "npm run build -w @pharmaqms/shared && npm run migrate:equipment-rooms -w server",
     "test": "npm run build -w @pharmaqms/shared && npm run test --workspace=server --workspace=client",
     "lint": "npm run lint --workspaces --if-present"
   },

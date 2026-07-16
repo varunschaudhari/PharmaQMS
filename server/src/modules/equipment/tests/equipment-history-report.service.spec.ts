@@ -34,6 +34,7 @@ import { LogbookService } from '../logbook.service';
 import { MaintenanceService } from '../maintenance.service';
 import { PmService } from '../pm.service';
 import { QualificationService } from '../qualification.service';
+import { CalibrationAgency, CalibrationAgencySchema } from '../schemas/calibration-agency.schema';
 import { CalibrationRecord, CalibrationRecordSchema } from '../schemas/calibration-record.schema';
 import { CalibrationSchedule, CalibrationScheduleSchema } from '../schemas/calibration-schedule.schema';
 import { Equipment, EquipmentSchema } from '../schemas/equipment.schema';
@@ -88,6 +89,7 @@ describe('EQP-10 EquipmentHistoryReportService', () => {
           { name: Role.name, schema: RoleSchema },
           { name: CalibrationSchedule.name, schema: CalibrationScheduleSchema },
           { name: CalibrationRecord.name, schema: CalibrationRecordSchema },
+          { name: CalibrationAgency.name, schema: CalibrationAgencySchema },
           { name: LogbookEntry.name, schema: LogbookEntrySchema },
           { name: MaintenanceTask.name, schema: MaintenanceTaskSchema },
           { name: QualificationRecord.name, schema: QualificationRecordSchema },

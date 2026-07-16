@@ -6,6 +6,8 @@ import {
   WORKFLOW_STEP_CHANGED_EVENT,
   WorkflowAction,
   WorkflowInstanceStatus,
+  approvalCompletedWhatsAppParams,
+  taskAssignedWhatsAppParams,
   type WorkflowStepChangedEvent,
 } from '@pharmaqms/shared';
 import { Model } from 'mongoose';
@@ -54,6 +56,7 @@ export class WorkflowNotificationListener {
           entityId: event.entityId,
           ...content,
           actor,
+          whatsapp: taskAssignedWhatsAppParams(event.entityType, event.entityId, event.toStepName),
         });
       }
       return;
@@ -66,6 +69,7 @@ export class WorkflowNotificationListener {
         isActive: true,
       });
       const content = taskAssignedContent(event.entityType, event.entityId, event.toStepName);
+      const whatsapp = taskAssignedWhatsAppParams(event.entityType, event.entityId, event.toStepName);
       for (const assignee of assignees) {
         await this.notificationsService.notify({
           tenantId: event.tenantId,
@@ -75,6 +79,7 @@ export class WorkflowNotificationListener {
           entityId: event.entityId,
           ...content,
           actor,
+          whatsapp,
         });
       }
     }
@@ -91,6 +96,7 @@ export class WorkflowNotificationListener {
           entityId: event.entityId,
           ...content,
           actor,
+          whatsapp: approvalCompletedWhatsAppParams(event.entityType, event.entityId, event.actorFullName),
         });
       }
 

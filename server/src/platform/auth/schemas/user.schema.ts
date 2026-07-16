@@ -50,6 +50,14 @@ export class User {
   // Bumped on every refresh-token rotation (and on lockout) to invalidate outstanding refresh tokens.
   @Prop({ default: 0 })
   tokenVersion!: number;
+
+  // PLT-6-WA: E.164 phone number this user has confirmed for WhatsApp delivery; null until set.
+  @Prop({ type: String, default: null })
+  whatsappPhoneNumber!: string | null;
+
+  // PLT-6-WA: explicit per-user consent — a phone number alone never triggers a send.
+  @Prop({ default: false })
+  whatsappOptIn!: boolean;
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

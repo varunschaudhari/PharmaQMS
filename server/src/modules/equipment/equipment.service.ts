@@ -73,6 +73,7 @@ export class EquipmentService {
       modelName: dto.modelName ?? null,
       serialNumber: dto.serialNumber ?? null,
       location: dto.location,
+      roomId: dto.roomId ?? null,
       departmentId: dto.departmentId,
       isGmpCritical: dto.isGmpCritical,
       status: EquipmentStatus.ACTIVE,
@@ -101,6 +102,7 @@ export class EquipmentService {
       modelName: equipment.modelName,
       serialNumber: equipment.serialNumber,
       location: equipment.location,
+      roomId: equipment.roomId ? equipment.roomId.toString() : null,
       isGmpCritical: equipment.isGmpCritical,
       installDate: equipment.installDate,
     };
@@ -110,6 +112,7 @@ export class EquipmentService {
     if (dto.modelName !== undefined) equipment.modelName = dto.modelName;
     if (dto.serialNumber !== undefined) equipment.serialNumber = dto.serialNumber;
     if (dto.location !== undefined) equipment.location = dto.location;
+    if (dto.roomId !== undefined) equipment.roomId = dto.roomId as unknown as EquipmentDocument['roomId'];
     if (dto.isGmpCritical !== undefined) equipment.isGmpCritical = dto.isGmpCritical;
     if (dto.installDate !== undefined) equipment.installDate = new Date(dto.installDate);
     await equipment.save();
@@ -304,6 +307,7 @@ export class EquipmentService {
       modelName: equipment.modelName,
       serialNumber: equipment.serialNumber,
       location: equipment.location,
+      roomId: equipment.roomId ? equipment.roomId.toString() : null,
       departmentId: equipment.departmentId.toString(),
       isGmpCritical: equipment.isGmpCritical,
       status: equipment.status,

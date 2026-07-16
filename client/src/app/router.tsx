@@ -12,12 +12,24 @@ import { DocumentDetailPage } from '../features/documents/pages/document-detail-
 import { DocumentNewVersionPage } from '../features/documents/pages/document-new-version-page';
 import { DocumentsPage } from '../features/documents/pages/documents-page';
 import { ReviewDuePage } from '../features/documents/pages/review-due-page';
+import { CalibrationAgenciesListPage } from '../features/equipment/pages/calibration-agencies-list-page';
+import { CalibrationAgencyCreatePage } from '../features/equipment/pages/calibration-agency-create-page';
+import { CalibrationAgencyDetailPage } from '../features/equipment/pages/calibration-agency-detail-page';
+import { CalibrationCertificateRegistryPage } from '../features/equipment/pages/calibration-certificate-registry-page';
+import { CalibrationDueByAgencyPage } from '../features/equipment/pages/calibration-due-by-agency-page';
 import { CalibrationDuePage } from '../features/equipment/pages/calibration-due-page';
 import { EquipmentCreatePage } from '../features/equipment/pages/equipment-create-page';
 import { EquipmentDetailPage } from '../features/equipment/pages/equipment-detail-page';
 import { EquipmentListPage } from '../features/equipment/pages/equipment-list-page';
 import { MaintenanceQueuePage } from '../features/equipment/pages/maintenance-queue-page';
 import { PmQueuePage } from '../features/equipment/pages/pm-queue-page';
+import { MaterialLotCreatePage } from '../features/materials/pages/material-lot-create-page';
+import { MaterialLotDetailPage } from '../features/materials/pages/material-lot-detail-page';
+import { MaterialLotsListPage } from '../features/materials/pages/material-lots-list-page';
+import { RoomCleaningDuePage } from '../features/rooms/pages/room-cleaning-due-page';
+import { RoomCreatePage } from '../features/rooms/pages/room-create-page';
+import { RoomDetailPage } from '../features/rooms/pages/room-detail-page';
+import { RoomsListPage } from '../features/rooms/pages/rooms-list-page';
 import { TestRecordDetailPage } from '../features/test-records/pages/test-record-detail-page';
 import { TestRecordsPage } from '../features/test-records/pages/test-records-page';
 import { EmployeeRecordPage } from '../features/training/pages/employee-record-page';
@@ -229,11 +241,131 @@ export function AppRouter() {
         }
       />
       <Route
+        path="/equipment/calibration-agencies"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <CalibrationAgenciesListPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/equipment/calibration-agencies/new"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <CalibrationAgencyCreatePage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/equipment/calibration-agencies/due"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <CalibrationDueByAgencyPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/equipment/calibration-agencies/certificates"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <CalibrationCertificateRegistryPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/equipment/calibration-agencies/:id"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <CalibrationAgencyDetailPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
         path="/equipment/:id"
         element={
           <ProtectedRoute>
             <DesktopShell>
               <EquipmentDetailPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <RoomsListPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms/new"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <RoomCreatePage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms/cleaning/due"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <RoomCleaningDuePage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/rooms/:id"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <RoomDetailPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/materials"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <MaterialLotsListPage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/materials/new"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <MaterialLotCreatePage />
+            </DesktopShell>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/materials/:id"
+        element={
+          <ProtectedRoute>
+            <DesktopShell>
+              <MaterialLotDetailPage />
             </DesktopShell>
           </ProtectedRoute>
         }

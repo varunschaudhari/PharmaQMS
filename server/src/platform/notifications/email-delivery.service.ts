@@ -1,6 +1,6 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { NotificationEmailMode } from '@pharmaqms/shared';
+import { NotificationChannel, NotificationEmailMode } from '@pharmaqms/shared';
 import { Model } from 'mongoose';
 import { User, UserDocument } from '../auth/schemas/user.schema';
 import { Tenant, TenantDocument } from '../tenant/schemas/tenant.schema';
@@ -51,6 +51,10 @@ export class EmailDeliveryService {
     const digestTenants = await this.tenantModel.find({
       isActive: true,
       'settings.notificationEmailMode': NotificationEmailMode.DAILY_DIGEST,
+      // PLT-6-WA: additive gate — every pre-WhatsApp tenant defaults to notificationChannels
+      // containing EMAIL, so this is a no-op for all of them; only a tenant that explicitly
+      // switches to WhatsApp-only stops receiving digests.
+      'settings.notificationChannels': NotificationChannel.EMAIL,
     });
 
     let digestsSent = 0;

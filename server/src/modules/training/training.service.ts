@@ -26,6 +26,7 @@ import {
 } from './schemas/document-training-target.schema';
 import { TrainingAssignment, TrainingAssignmentDocument } from './schemas/training-assignment.schema';
 import { TRAINING_ASSIGNMENT_ENTITY_TYPE } from './training-entity-types';
+import { TrainingAssessmentService } from './training-assessment.service';
 
 const MONGO_DUPLICATE_KEY = 11000;
 const MILLIS_PER_DAY = 24 * 60 * 60 * 1000;
@@ -40,10 +41,14 @@ export class TrainingService {
     private readonly auditService: AuditService,
     private readonly esignService: EsignService,
     private readonly pdfRenderService: PdfRenderService,
+    private readonly trainingAssessmentService: TrainingAssessmentService,
   ) {}
 
   // DOC-9/TRN-3: mirror the latest snapshot, then (re)assign for every currently-mapped user.
   async upsertTrainingTarget(event: DocumentTrainingTargetChangedEvent): Promise<void> {
+    const previous = await this.targetModel.findOne({ tenantId: event.tenantId, documentId: event.documentId });
+    const previousEffectiveVersionId = previous?.effectiveVersionId ?? null;
+
     const target = await this.targetModel.findOneAndUpdate(
       { tenantId: event.tenantId, documentId: event.documentId },
       {
@@ -61,6 +66,19 @@ export class TrainingService {
 
     if (!target.effectiveVersionId) {
       return; // Distribution configured, but nothing Effective yet — nothing to assign.
+    }
+
+    // TRN-6 (a): the new Effective version carries forward the prior version's assessment (as a
+    // fresh Draft requiring QA re-approval) — never auto-usable by trainees.
+    if (previousEffectiveVersionId && previousEffectiveVersionId !== target.effectiveVersionId) {
+      await this.trainingAssessmentService.carryForwardAssessment(
+        event.tenantId,
+        event.documentId,
+        previousEffectiveVersionId,
+        target.effectiveVersionId,
+        target.effectiveVersionLabel ?? '',
+        target.docNumber,
+      );
     }
 
     const matchQuery = this.buildUserMatchQuery(
@@ -119,6 +137,20 @@ export class TrainingService {
       );
     }
 
+    // TRN-6: never trust the client to have routed through the quiz first — if this version has
+    // an Approved assessment, a passing attempt must already exist (last line of defense, same
+    // "service re-checks what the client enforces" pattern as DOC-8's changeSummary).
+    if (await this.trainingAssessmentService.hasApprovedAssessment(tenantId, assignment.versionId)) {
+      const hasPassed = await this.trainingAssessmentService.hasPassingAttempt(tenantId, assignment._id.toString());
+      if (!hasPassed) {
+        throw new AppException(
+          ErrorCode.VALIDATION_ERROR,
+          'Complete and pass the assessment for this document before signing.',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+    }
+
     await this.esignService.createSignature({
       tenantId,
       userId: signer.userId,
@@ -146,7 +178,10 @@ export class TrainingService {
 
     const user = await this.userModel.findOne({ _id: signer.userId, tenantId });
     const tenant = await this.tenantModel.findById(tenantId);
-    return this.toAssignmentData(assignment, resolveTrainingGracePeriodDays(tenant), user?.fullName ?? signer.fullName);
+    const [data] = await this.attachAssessmentSummaries(tenantId, [
+      this.toAssignmentData(assignment, resolveTrainingGracePeriodDays(tenant), user?.fullName ?? signer.fullName),
+    ]);
+    return data;
   }
 
   async listForUser(tenantId: string, userId: string): Promise<TrainingAssignmentData[]> {
@@ -159,7 +194,8 @@ export class TrainingService {
       throw new AppException(ErrorCode.NOT_FOUND, 'Employee not found.', HttpStatus.NOT_FOUND);
     }
     const gracePeriodDays = resolveTrainingGracePeriodDays(tenant);
-    return assignments.map((a) => this.toAssignmentData(a, gracePeriodDays, user.fullName));
+    const base = assignments.map((a) => this.toAssignmentData(a, gracePeriodDays, user.fullName));
+    return this.attachAssessmentSummaries(tenantId, base);
   }
 
   // TRN-1: admin overview — role/department × document mapping (DOC-9), with live completion
@@ -177,6 +213,7 @@ export class TrainingService {
       const totalOverdue = assignments.filter(
         (a) => a.status === TrainingAssignmentStatus.PENDING && this.isOverdue(a.assignedAt, gracePeriodDays, now),
       ).length;
+      const assessmentStats = await this.trainingAssessmentService.getMatrixAssessmentStats(tenantId, target.documentId);
       results.push({
         documentId: target.documentId,
         docNumber: target.docNumber,
@@ -187,6 +224,8 @@ export class TrainingService {
         totalAssigned: assignments.length,
         totalCompleted,
         totalOverdue,
+        totalAssessmentAttempts: assessmentStats.totalAssessmentAttempts,
+        totalAssessmentFailedMaxAttempts: assessmentStats.totalAssessmentFailedMaxAttempts,
       });
     }
     return results;
@@ -208,9 +247,10 @@ export class TrainingService {
     const users = await this.userModel.find({ tenantId, _id: { $in: userIds } });
     const nameById = new Map(users.map((u) => [u._id.toString(), u.fullName]));
 
-    return overdue
+    const base = overdue
       .map((a) => this.toAssignmentData(a, gracePeriodDays, nameById.get(a.userId) ?? 'Unknown', now))
       .sort((a, b) => (a.dueDate! < b.dueDate! ? -1 : 1));
+    return this.attachAssessmentSummaries(tenantId, base);
   }
 
   async generateEmployeeRecordPdf(tenantId: string, userId: string): Promise<Buffer> {
@@ -356,7 +396,21 @@ export class TrainingService {
       dueDate: dueDate ? dueDate.toISOString() : null,
       isOverdue: isPending && dueDate !== null && dueDate <= now,
       completedAt: doc.completedAt ? doc.completedAt.toISOString() : null,
+      assessment: null,
     };
+  }
+
+  // TRN-6: batches the assessment-summary lookup across a whole list rather than one async call
+  // per assignment inside a plain .map() (see TrainingAssessmentService.getAssignmentAssessmentSummaries).
+  private async attachAssessmentSummaries(tenantId: string, base: TrainingAssignmentData[]): Promise<TrainingAssignmentData[]> {
+    if (base.length === 0) {
+      return base;
+    }
+    const summaries = await this.trainingAssessmentService.getAssignmentAssessmentSummaries(
+      tenantId,
+      base.map((a) => ({ id: a.id, versionId: a.versionId })),
+    );
+    return base.map((a) => ({ ...a, assessment: summaries.get(a.id) ?? null }));
   }
 }
 

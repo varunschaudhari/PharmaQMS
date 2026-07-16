@@ -1,4 +1,10 @@
-import { NotificationEmailMode, type CredentialType } from '@pharmaqms/shared';
+import {
+  DEFAULT_WHATSAPP_TEMPLATE_NAMES,
+  NotificationChannel,
+  NotificationEmailMode,
+  type CredentialType,
+  type WhatsAppTemplateKey,
+} from '@pharmaqms/shared';
 import type { TenantDocument } from './schemas/tenant.schema';
 
 export interface EffectiveJwtTtlSettings {
@@ -56,4 +62,26 @@ export function resolveMaintenanceRoleId(tenant: TenantDocument | null): string 
 // EQP-7: defaults to the safer, verification-required behavior when no tenant document exists.
 export function resolveRequireMaintenanceVerification(tenant: TenantDocument | null): boolean {
   return tenant?.settings.requireMaintenanceVerification ?? true;
+}
+
+// PLT-6-WA: defaults to email-only when no tenant document exists OR the tenant has never
+// configured this setting — this is the invariant that keeps existing/default tenants' email
+// behavior completely unchanged by WhatsApp's introduction.
+export function resolveNotificationChannels(tenant: TenantDocument | null): NotificationChannel[] {
+  return tenant?.settings.notificationChannels ?? [NotificationChannel.EMAIL];
+}
+
+// PLT-6-WA: a tenant's own Meta template-name override, falling back to the platform default.
+export function resolveWhatsAppTemplateName(tenant: TenantDocument | null, templateKey: WhatsAppTemplateKey): string {
+  return tenant?.settings.whatsappTemplateNames?.[templateKey] ?? DEFAULT_WHATSAPP_TEMPLATE_NAMES[templateKey];
+}
+
+// TRN-6: default matches the platform default (80%) when no tenant document exists.
+export function resolveTrainingAssessmentPassMarkPercentage(tenant: TenantDocument | null): number {
+  return tenant?.settings.trainingAssessmentPassMarkPercentage ?? 80;
+}
+
+// TRN-6: default matches the platform default (3 attempts) when no tenant document exists.
+export function resolveTrainingAssessmentMaxAttempts(tenant: TenantDocument | null): number {
+  return tenant?.settings.trainingAssessmentMaxAttempts ?? 3;
 }

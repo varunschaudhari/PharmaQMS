@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { SignatureDialog } from '../../../components/ui/signature-dialog';
 import { extractErrorMessage } from '../../../lib/api-error';
 import { completeTrainingAssignment, fetchMyTrainingAssignments } from '../../../lib/training-api';
+import { TrainingAssessmentQuiz } from '../components/training-assessment-quiz';
 
 // TRN-2: read-and-understood flow, mobile-first (SPEC §7.2 "works on mobile") — narrow card
 // layout rather than a wide table so it renders equally well on a phone or the desktop shell.
@@ -16,6 +17,7 @@ export function MyTrainingsPage() {
 
   const [error, setError] = useState<string | null>(null);
   const [signingAssignmentId, setSigningAssignmentId] = useState<string | null>(null);
+  const [quizAssignmentId, setQuizAssignmentId] = useState<string | null>(null);
 
   async function handleSign(signingToken: string): Promise<void> {
     if (!signingAssignmentId) return;
@@ -59,13 +61,31 @@ export function MyTrainingsPage() {
                   {assignment.isOverdue ? 'Overdue' : 'Due'} {assignment.dueDate.slice(0, 10)}
                 </p>
               )}
-              <button
-                type="button"
-                onClick={() => setSigningAssignmentId(assignment.id)}
-                className="mt-3 w-full rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white"
-              >
-                I have read and understood this document
-              </button>
+              {/* TRN-6: "Retraining required" is derived — an attempt exists but hasn't passed yet. */}
+              {assignment.assessment && assignment.assessment.attemptCount > 0 && !assignment.assessment.passed && (
+                <p className="mt-1 text-xs font-semibold text-amber-600">
+                  Retraining required — best score {assignment.assessment.bestScorePercentage}%
+                  {assignment.assessment.maxAttemptsReached && ' (max attempts reached — contact your department head)'}
+                </p>
+              )}
+              {assignment.assessment && !assignment.assessment.passed ? (
+                <button
+                  type="button"
+                  disabled={assignment.assessment.maxAttemptsReached}
+                  onClick={() => setQuizAssignmentId(assignment.id)}
+                  className="mt-3 w-full rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white disabled:opacity-50"
+                >
+                  Take assessment
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setSigningAssignmentId(assignment.id)}
+                  className="mt-3 w-full rounded bg-slate-900 px-3 py-2 text-sm font-medium text-white"
+                >
+                  I have read and understood this document
+                </button>
+              )}
             </li>
           ))}
         </ul>
@@ -91,6 +111,14 @@ export function MyTrainingsPage() {
           meaning={SignatureMeaning.TRAINED_READ_AND_UNDERSTOOD}
           onSign={handleSign}
           onCancel={() => setSigningAssignmentId(null)}
+        />
+      )}
+
+      {quizAssignmentId && (
+        <TrainingAssessmentQuiz
+          assignmentId={quizAssignmentId}
+          onPassed={() => setQuizAssignmentId(null)}
+          onCancel={() => setQuizAssignmentId(null)}
         />
       )}
     </div>

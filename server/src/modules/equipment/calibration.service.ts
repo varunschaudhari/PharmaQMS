@@ -24,6 +24,7 @@ import { AuditService } from '../../platform/audit/audit.service';
 import { EsignService } from '../../platform/esign/esign.service';
 import { EQUIPMENT_ENTITY_TYPE } from './equipment-entity-types';
 import { EquipmentService } from './equipment.service';
+import { CalibrationAgency, CalibrationAgencyDocument } from './schemas/calibration-agency.schema';
 import { CalibrationRecord, CalibrationRecordDocument } from './schemas/calibration-record.schema';
 import { CalibrationSchedule, CalibrationScheduleDocument } from './schemas/calibration-schedule.schema';
 import { Equipment, EquipmentDocument } from './schemas/equipment.schema';
@@ -56,6 +57,7 @@ export class CalibrationService {
     @InjectModel(CalibrationSchedule.name) private readonly scheduleModel: Model<CalibrationScheduleDocument>,
     @InjectModel(CalibrationRecord.name) private readonly recordModel: Model<CalibrationRecordDocument>,
     @InjectModel(Equipment.name) private readonly equipmentModel: Model<EquipmentDocument>,
+    @InjectModel(CalibrationAgency.name) private readonly agencyModel: Model<CalibrationAgencyDocument>,
     private readonly equipmentService: EquipmentService,
     private readonly auditService: AuditService,
     private readonly esignService: EsignService,
@@ -81,9 +83,21 @@ export class CalibrationService {
           toleranceClass: existing.toleranceClass,
           agencyType: existing.agencyType,
           agencyName: existing.agencyName,
+          agencyId: existing.agencyId,
           nextDueDate: existing.nextDueDate,
         }
       : null;
+
+    // EQP-11: agencyId only applies when external — re-checked here even though the client should
+    // never send one alongside 'internal' (never trust the client, same DOC-8 pattern).
+    let agencyId: string | null = null;
+    if (dto.agencyType === 'external' && dto.agencyId) {
+      const agency = await this.agencyModel.findOne({ _id: dto.agencyId, tenantId });
+      if (!agency) {
+        throw new AppException(ErrorCode.NOT_FOUND, 'Calibration agency not found.', HttpStatus.NOT_FOUND);
+      }
+      agencyId = dto.agencyId;
+    }
 
     const nextDueDate = new Date(dto.nextDueDate);
     const schedule =
@@ -94,6 +108,7 @@ export class CalibrationService {
     schedule.toleranceClass = dto.toleranceClass;
     schedule.agencyType = dto.agencyType;
     schedule.agencyName = dto.agencyName ?? null;
+    schedule.agencyId = agencyId as unknown as CalibrationScheduleDocument['agencyId'];
     schedule.nextDueDate = nextDueDate;
     await schedule.save();
 
@@ -110,6 +125,7 @@ export class CalibrationService {
         toleranceClass: schedule.toleranceClass,
         agencyType: schedule.agencyType,
         agencyName: schedule.agencyName,
+        agencyId: schedule.agencyId,
         nextDueDate: schedule.nextDueDate,
       },
     });
@@ -213,6 +229,14 @@ export class CalibrationService {
     await this.fileStorage.put(record.certificateFileKey, file.buffer, file.mimetype);
     await record.save();
 
+    // EQP-11 (d): expired accreditation never blocks recording (QA decides) — but its presence at
+    // the moment of recording IS audited, so QA can see it happened during an inspection.
+    let accreditationExpiredWarning = false;
+    if (schedule.agencyId) {
+      const agency = await this.agencyModel.findOne({ _id: schedule.agencyId, tenantId });
+      accreditationExpiredWarning = Boolean(agency?.accreditationValidUntil && agency.accreditationValidUntil < new Date());
+    }
+
     await this.auditService.record({
       tenantId,
       actor,
@@ -220,7 +244,12 @@ export class CalibrationService {
       entityId: equipmentId,
       action: AuditAction.CALIBRATION_RECORDED,
       before: null,
-      after: { performedDate: record.performedDate, result: record.result, fileName: file.originalname },
+      after: {
+        performedDate: record.performedDate,
+        result: record.result,
+        fileName: file.originalname,
+        ...(accreditationExpiredWarning ? { accreditationExpiredWarning: true } : {}),
+      },
     });
 
     if (result === CalibrationResult.FAIL) {
@@ -364,6 +393,14 @@ export class CalibrationService {
     return toRecordData(record);
   }
 
+  // EQP-11 (e): the certificate registry needs a way to actually open the document, not just list
+  // its metadata — mirrors EQP-8's qualification protocol/report download pattern exactly.
+  async getCertificateFile(tenantId: string, equipmentId: string, recordId: string): Promise<{ buffer: Buffer; contentType: string; fileName: string }> {
+    const record = await this.findRecordOrThrow(tenantId, equipmentId, recordId);
+    const stored = await this.fileStorage.get(record.certificateFileKey);
+    return { buffer: stored.buffer, contentType: stored.contentType, fileName: record.certificateFileName };
+  }
+
   private async findRecordOrThrow(
     tenantId: string,
     equipmentId: string,
@@ -399,6 +436,7 @@ function toScheduleData(doc: CalibrationScheduleDocument): CalibrationScheduleDa
     toleranceClass: doc.toleranceClass,
     agencyType: doc.agencyType,
     agencyName: doc.agencyName,
+    agencyId: doc.agencyId ? doc.agencyId.toString() : null,
     nextDueDate: doc.nextDueDate.toISOString(),
   };
 }

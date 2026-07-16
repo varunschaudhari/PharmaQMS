@@ -7,6 +7,8 @@
     "dev": "nest start --watch",
     "build": "nest build",
     "start": "node dist/main.js",
+    "seed": "ts-node --transpile-only src/scripts/seed-dev.ts",
+    "migrate:equipment-rooms": "ts-node --transpile-only src/scripts/migrate-equipment-rooms.ts",
     "lint": "eslint \"src/**/*.ts\" \"test/**/*.ts\"",
     "test": "jest"
   },

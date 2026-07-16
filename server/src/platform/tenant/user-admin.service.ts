@@ -25,6 +25,8 @@ export interface CreateUserInput {
   password: string;
   roleId: string;
   departmentId?: string;
+  whatsappPhoneNumber?: string | null;
+  whatsappOptIn?: boolean;
 }
 
 export interface UpdateUserInput {
@@ -32,6 +34,9 @@ export interface UpdateUserInput {
   roleId?: string;
   departmentId?: string | null;
   isActive?: boolean;
+  // PLT-6-WA: audited via the same generic before/after diff as every other field here.
+  whatsappPhoneNumber?: string | null;
+  whatsappOptIn?: boolean;
 }
 
 @Injectable()
@@ -71,6 +76,8 @@ export class UserAdminService {
       passwordHash,
       roleId: input.roleId,
       departmentId: input.departmentId ?? null,
+      whatsappPhoneNumber: input.whatsappPhoneNumber ?? null,
+      whatsappOptIn: input.whatsappOptIn ?? false,
     });
 
     // TRN-1: "adding a user to a role auto-generates their pending training items."
@@ -111,6 +118,8 @@ export class UserAdminService {
         user.tokenVersion += 1;
       }
     }
+    if (input.whatsappPhoneNumber !== undefined) user.whatsappPhoneNumber = input.whatsappPhoneNumber;
+    if (input.whatsappOptIn !== undefined) user.whatsappOptIn = input.whatsappOptIn;
     await user.save();
 
     // TRN-1: retrigger the training-assignment sync only when the role/department actually
@@ -165,6 +174,8 @@ function userSnapshot(user: UserDocument): Record<string, unknown> {
     roleId: user.roleId.toString(),
     departmentId: user.departmentId ? user.departmentId.toString() : null,
     isActive: user.isActive,
+    whatsappPhoneNumber: user.whatsappPhoneNumber,
+    whatsappOptIn: user.whatsappOptIn,
   };
 }
 
@@ -177,6 +188,8 @@ function toUserAdminData(doc: {
   departmentId: unknown;
   isActive: boolean;
   isPlatformAdmin: boolean;
+  whatsappPhoneNumber: string | null;
+  whatsappOptIn: boolean;
 }): UserAdminData {
   return {
     id: String(doc._id),
@@ -187,5 +200,7 @@ function toUserAdminData(doc: {
     departmentId: doc.departmentId ? String(doc.departmentId) : null,
     isActive: doc.isActive,
     isPlatformAdmin: doc.isPlatformAdmin,
+    whatsappPhoneNumber: doc.whatsappPhoneNumber,
+    whatsappOptIn: doc.whatsappOptIn,
   };
 }

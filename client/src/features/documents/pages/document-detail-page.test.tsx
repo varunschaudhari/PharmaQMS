@@ -3,6 +3,8 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { describe, expect, it, vi } from 'vitest';
+import { AuthProvider } from '../../auth/context/auth-context';
+import { signFakeAccessTokenForTest } from '../../../lib/jwt.test-helpers';
 import { DocumentDetailPage } from './document-detail-page';
 
 const {
@@ -27,6 +29,7 @@ const {
 const { fetchSignatures } = vi.hoisted(() => ({ fetchSignatures: vi.fn() }));
 const { fetchAuditHistory } = vi.hoisted(() => ({ fetchAuditHistory: vi.fn() }));
 const { fetchRoles, fetchDepartments } = vi.hoisted(() => ({ fetchRoles: vi.fn(), fetchDepartments: vi.fn() }));
+const { fetchTrainingAssessmentForAuthoring } = vi.hoisted(() => ({ fetchTrainingAssessmentForAuthoring: vi.fn() }));
 
 vi.mock('../../../lib/documents-api', () => ({
   fetchDocument,
@@ -41,6 +44,7 @@ vi.mock('../../../lib/documents-api', () => ({
 vi.mock('../../../lib/esign-api', () => ({ fetchSignatures }));
 vi.mock('../../../lib/audit-api', () => ({ fetchAuditHistory }));
 vi.mock('../../../lib/admin-api', () => ({ fetchRoles, fetchDepartments }));
+vi.mock('../../../lib/training-assessment-api', () => ({ fetchTrainingAssessmentForAuthoring }));
 
 const draftVersion = {
   id: 'ver-1',
@@ -62,18 +66,23 @@ const draftVersion = {
 function renderPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   return render(
-    <QueryClientProvider client={queryClient}>
-      <MemoryRouter initialEntries={['/documents/doc-1']}>
-        <Routes>
-          <Route path="/documents/:id" element={<DocumentDetailPage />} />
-        </Routes>
-      </MemoryRouter>
-    </QueryClientProvider>,
+    <AuthProvider>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/documents/doc-1']}>
+          <Routes>
+            <Route path="/documents/:id" element={<DocumentDetailPage />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    </AuthProvider>,
   );
 }
 
 describe('DOC-3 DocumentDetailPage', () => {
   it('DOC-3: a draft document shows version history, HistoryTab, and submits for review', async () => {
+    localStorage.clear();
+    localStorage.setItem('pharmaqms.accessToken', signFakeAccessTokenForTest({ permissions: ['training:edit'] }));
+    fetchTrainingAssessmentForAuthoring.mockResolvedValue(null);
     const user = userEvent.setup();
     fetchDocument.mockResolvedValue({
       id: 'doc-1',

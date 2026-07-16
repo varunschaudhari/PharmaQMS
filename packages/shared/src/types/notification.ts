@@ -1,4 +1,6 @@
 import type { NotificationEvent } from '../enums/notification-event';
+import type { WhatsAppDeliveryStatus } from '../enums/whatsapp-delivery-status';
+import type { WhatsAppTemplateKey } from '../enums/whatsapp-template-key';
 
 // PLT-6: one per-user notification-log entry (SPEC.md §6.1 PLT-6 — assigned / due-soon /
 // overdue / approved / rejected). Regulated-adjacent: append-only in spirit (created + read-flag
@@ -22,6 +24,18 @@ export interface NotificationData {
   // Set when the email transport accepted the message; null while pending or if the tenant is
   // in digest mode (the digest job sets it when the digest goes out).
   emailedAt: string | null;
+  // PLT-6-WA: null when this notification's event has no WhatsApp template mapping (most
+  // events) OR the tenant hasn't enabled the WhatsApp channel — non-null only when a WhatsApp
+  // send was actually contemplated for this notification.
+  whatsappTemplateKey: WhatsAppTemplateKey | null;
+  whatsappTemplateParams: string[] | null;
+  whatsappStatus: WhatsAppDeliveryStatus | null;
+  whatsappSentAt: string | null;
+  // Meta's message id for this send — the join key the delivery-status webhook matches on.
+  whatsappProviderMessageId: string | null;
+  // Raw provider response/error, kept for support/debugging (never displayed to end users).
+  whatsappProviderResponse: unknown | null;
+  whatsappAttempts: number;
   createdAt: string;
 }
 

@@ -1,4 +1,4 @@
-import { NotificationEvent, type TrainingAssignmentData } from '@pharmaqms/shared';
+import { NotificationEvent, WhatsAppTemplateKey, type TrainingAssignmentData } from '@pharmaqms/shared';
 import mongoose, { Model } from 'mongoose';
 import { UserDocument } from '../../../platform/auth/schemas/user.schema';
 import { DepartmentDocument } from '../../../platform/tenant/schemas/department.schema';
@@ -63,6 +63,14 @@ describe('TRN-5 training-overdue due-date scanner', () => {
     expect(headFinding!.title).toContain('Team training overdue');
     // Same logical fact, different recipients — the compound dedupe index scopes by userId.
     expect(employeeFinding!.dedupeKey).toBe(headFinding!.dedupeKey);
+
+    // PLT-6-WA: both recipients get the SAME TRAINING_OVERDUE template/params — the template
+    // always describes the trainee, regardless of who receives it.
+    expect(employeeFinding!.whatsapp).toEqual({
+      templateKey: WhatsAppTemplateKey.TRAINING_OVERDUE,
+      params: ['Olive Operator', 'SOP-QA-001', 'Cleaning of pH meters'],
+    });
+    expect(headFinding!.whatsapp).toEqual(employeeFinding!.whatsapp);
   });
 
   it('TRN-5: no department (or no head configured) produces only the employee finding', async () => {

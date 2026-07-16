@@ -1,4 +1,4 @@
-import { NotificationEvent } from '@pharmaqms/shared';
+import { NotificationEvent, WhatsAppTemplateKey } from '@pharmaqms/shared';
 import mongoose, { Model } from 'mongoose';
 import { DepartmentDocument } from '../../../platform/tenant/schemas/department.schema';
 import { EquipmentCalibrationScanner } from '../equipment-calibration.scanner';
@@ -40,6 +40,23 @@ describe('EQP-4 equipment-calibration due-date scanner', () => {
     expect(findings[0].event).toBe(NotificationEvent.OVERDUE);
     expect(findings[0].entityId).toBe(equipmentId.toString());
     expect(findings[0].title).toContain('overdue');
+  });
+
+  it('PLT-6-WA: an overdue finding carries a CALIBRATION_OVERDUE WhatsApp template with equipmentCode/name/dueDate params', async () => {
+    const equipmentId = objId('507f1f77bcf86cd799439029');
+    const departmentId = objId('507f1f77bcf86cd799439030');
+    const scanner = makeScanner(
+      [{ equipmentId, nextDueDate: new Date('2026-01-01T00:00:00.000Z') } as unknown as CalibrationScheduleDocument],
+      [{ _id: equipmentId, equipmentCode: 'EQP-0005', name: 'pH Meter', departmentId } as unknown as EquipmentDocument],
+      [{ _id: departmentId, headUserId: 'head-user-4' } as unknown as DepartmentDocument],
+    );
+
+    const findings = await scanner.scan({ tenantId: 'tenant-1', runDate: '2026-07-11', now: new Date('2026-07-11T00:00:00.000Z') });
+
+    expect(findings[0].whatsapp).toEqual({
+      templateKey: WhatsAppTemplateKey.CALIBRATION_OVERDUE,
+      params: ['EQP-0005', 'pH Meter', '2026-01-01'],
+    });
   });
 
   it('EQP-4: a schedule with no configured department head produces no finding', async () => {

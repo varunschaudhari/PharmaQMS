@@ -33,6 +33,14 @@ export function UsersPage() {
     onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
   });
 
+  // PLT-6-WA: per-user WhatsApp opt-in + phone number — audited via the same generic
+  // PATCH /admin/users/:id endpoint as every other field on this page.
+  const updateWhatsAppMutation = useMutation({
+    mutationFn: ({ id, whatsappPhoneNumber, whatsappOptIn }: { id: string; whatsappPhoneNumber?: string | null; whatsappOptIn?: boolean }) =>
+      updateUser(id, { whatsappPhoneNumber, whatsappOptIn }),
+    onSuccess: () => void queryClient.invalidateQueries({ queryKey: ['users'] }),
+  });
+
   function handleSubmit(event: FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     if (!roleId) {
@@ -141,6 +149,8 @@ export function UsersPage() {
               <th className="py-1 pr-4 font-medium">Name</th>
               <th className="py-1 pr-4 font-medium">Email</th>
               <th className="py-1 pr-4 font-medium">Status</th>
+              <th className="py-1 pr-4 font-medium">WhatsApp number</th>
+              <th className="py-1 pr-4 font-medium">WhatsApp opt-in</th>
               <th className="py-1 pr-4 font-medium">Action</th>
             </tr>
           </thead>
@@ -150,6 +160,29 @@ export function UsersPage() {
                 <td className="py-2 pr-4">{user.fullName}</td>
                 <td className="py-2 pr-4">{user.email}</td>
                 <td className="py-2 pr-4">{user.isActive ? 'Active' : 'Inactive'}</td>
+                <td className="py-2 pr-4">
+                  <input
+                    key={`${user.id}-${user.whatsappPhoneNumber ?? ''}`}
+                    aria-label={`WhatsApp number for ${user.fullName}`}
+                    defaultValue={user.whatsappPhoneNumber ?? ''}
+                    placeholder="+919876543210"
+                    onBlur={(event) => {
+                      const value = event.target.value.trim();
+                      if (value !== (user.whatsappPhoneNumber ?? '')) {
+                        updateWhatsAppMutation.mutate({ id: user.id, whatsappPhoneNumber: value || null });
+                      }
+                    }}
+                    className="w-36 rounded border border-slate-300 px-2 py-1 text-sm"
+                  />
+                </td>
+                <td className="py-2 pr-4">
+                  <input
+                    type="checkbox"
+                    aria-label={`WhatsApp opt-in for ${user.fullName}`}
+                    checked={user.whatsappOptIn}
+                    onChange={(event) => updateWhatsAppMutation.mutate({ id: user.id, whatsappOptIn: event.target.checked })}
+                  />
+                </td>
                 <td className="py-2 pr-4">
                   <button
                     type="button"

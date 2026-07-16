@@ -24,6 +24,8 @@ import { TenantModule } from './platform/tenant/tenant.module';
 import { WorkflowModule } from './platform/workflow/workflow.module';
 import { TrainingModule } from './modules/training/training.module';
 import { EquipmentModule } from './modules/equipment/equipment.module';
+import { RoomsModule } from './modules/rooms/room.module';
+import { MaterialsModule } from './modules/materials/material-lot.module';
 
 @Module({
   imports: [
@@ -56,6 +58,8 @@ import { EquipmentModule } from './modules/equipment/equipment.module';
     DocumentsModule,
     TrainingModule,
     EquipmentModule,
+    RoomsModule,
+    MaterialsModule,
   ],
   controllers: [AppController],
   providers: [

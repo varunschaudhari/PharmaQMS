@@ -29,6 +29,12 @@ export class CalibrationSchedule {
   @Prop({ type: String, default: null, trim: true })
   agencyName!: string | null;
 
+  // EQP-11: optional link to a CalibrationAgency master record when agencyType is 'external' —
+  // a real same-module Mongoose reference (see calibration-agency.schema.ts's header comment).
+  // `agencyName` is kept as a free-text fallback for schedules never linked to a master record.
+  @Prop({ type: SchemaTypes.ObjectId, ref: 'CalibrationAgency', default: null })
+  agencyId!: Types.ObjectId | null;
+
   @Prop({ type: Date, required: true })
   nextDueDate!: Date;
 }

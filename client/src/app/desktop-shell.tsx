@@ -32,6 +32,18 @@ export function DesktopShell({ children }: { children: ReactNode }) {
           <NavLink to="/equipment/pm-tasks" className={navLinkClass}>
             PM Queue
           </NavLink>
+          <NavLink to="/equipment/calibration-agencies" end className={navLinkClass}>
+            Cal. Agencies
+          </NavLink>
+          <NavLink to="/rooms" end className={navLinkClass}>
+            Rooms
+          </NavLink>
+          <NavLink to="/rooms/cleaning/due" className={navLinkClass}>
+            Cleaning Due
+          </NavLink>
+          <NavLink to="/materials" end className={navLinkClass}>
+            Material Lots
+          </NavLink>
           <NavLink to="/documents/review-due" className={navLinkClass}>
             Review Due
           </NavLink>

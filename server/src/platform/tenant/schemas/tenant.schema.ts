@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { CredentialType, NotificationEmailMode } from '@pharmaqms/shared';
+import { CredentialType, NotificationChannel, NotificationEmailMode } from '@pharmaqms/shared';
 import { HydratedDocument } from 'mongoose';
 
 export type TenantDocument = HydratedDocument<Tenant>;
@@ -49,6 +49,24 @@ export class TenantSettings {
   // EQP-7: whether a closed maintenance task additionally requires a QA/user verification e-sign.
   @Prop({ type: Boolean, required: true, default: true })
   requireMaintenanceVerification!: boolean;
+
+  // PLT-6-WA: which channel(s) this tenant has enabled — defaults to email-only everywhere, so an
+  // unconfigured tenant's behavior is byte-for-byte unchanged from before WhatsApp existed.
+  @Prop({ type: [String], enum: Object.values(NotificationChannel), required: true, default: [NotificationChannel.EMAIL] })
+  notificationChannels!: NotificationChannel[];
+
+  // PLT-6-WA: per-tenant Meta template-name overrides, keyed by internal template key. Never
+  // holds provider credentials — those are env-only (see whatsapp.config.ts).
+  @Prop({ type: Object, default: {} })
+  whatsappTemplateNames!: Partial<Record<string, string>>;
+
+  // TRN-6: minimum score (percentage, 0-100) to pass a document assessment.
+  @Prop({ type: Number, required: true, default: 80 })
+  trainingAssessmentPassMarkPercentage!: number;
+
+  // TRN-6: attempts allowed before escalating to the department head.
+  @Prop({ type: Number, required: true, default: 3 })
+  trainingAssessmentMaxAttempts!: number;
 }
 
 const TenantSettingsSchema = SchemaFactory.createForClass(TenantSettings);

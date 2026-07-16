@@ -29,6 +29,7 @@ import { QrCode, QrCodeSchema } from '../../../platform/qr/schemas/qr-code.schem
 import { Department, DepartmentDocument, DepartmentSchema } from '../../../platform/tenant/schemas/department.schema';
 import { Tenant, TenantDocument, TenantSchema } from '../../../platform/tenant/schemas/tenant.schema';
 import { CalibrationService } from '../calibration.service';
+import { CalibrationAgency, CalibrationAgencySchema } from '../schemas/calibration-agency.schema';
 import { CalibrationRecord, CalibrationRecordSchema } from '../schemas/calibration-record.schema';
 import { CalibrationSchedule, CalibrationScheduleSchema } from '../schemas/calibration-schedule.schema';
 import { Equipment, EquipmentSchema } from '../schemas/equipment.schema';
@@ -79,6 +80,7 @@ describe('EQP-6 EQP-7 LogbookService', () => {
           { name: Role.name, schema: RoleSchema },
           { name: CalibrationSchedule.name, schema: CalibrationScheduleSchema },
           { name: CalibrationRecord.name, schema: CalibrationRecordSchema },
+          { name: CalibrationAgency.name, schema: CalibrationAgencySchema },
           { name: LogbookEntry.name, schema: LogbookEntrySchema },
           { name: MaintenanceTask.name, schema: MaintenanceTaskSchema },
           { name: QualificationRecord.name, schema: QualificationRecordSchema },

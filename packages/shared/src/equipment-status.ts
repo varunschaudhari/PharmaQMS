@@ -17,12 +17,14 @@ export function deriveCalibrationStatus(nextDueDate: string | null, now: Date = 
   return due <= horizon ? CalibrationStatus.DUE_SOON : CalibrationStatus.VALID;
 }
 
-// EQP-8/EQP-9: the same VALID/DUE_SOON/OVERDUE date-window logic as deriveCalibrationStatus,
-// reused (not copy-pasted) now that a third caller needs it — factored out here rather than in
-// EQP-4's function so calibration's public signature/return type stays untouched.
-type DueDateWindowStatus = 'not_scheduled' | 'valid' | 'due_soon' | 'overdue';
+// EQP-8/EQP-9/QRX-1: the same VALID/DUE_SOON/OVERDUE date-window logic as
+// deriveCalibrationStatus, reused (not copy-pasted) now that other callers need it — factored out
+// here rather than in EQP-4's function so calibration's public signature/return type stays
+// untouched. Exported so room-status.ts (QRX-1) can reuse it too, per CLAUDE.md's "reuse EQP-6's
+// patterns rather than reinventing."
+export type DueDateWindowStatus = 'not_scheduled' | 'valid' | 'due_soon' | 'overdue';
 
-function deriveDueDateWindowStatus(nextDueDate: string | null, now: Date): DueDateWindowStatus {
+export function deriveDueDateWindowStatus(nextDueDate: string | null, now: Date): DueDateWindowStatus {
   if (!nextDueDate) {
     return 'not_scheduled';
   }

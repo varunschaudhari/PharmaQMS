@@ -1,6 +1,6 @@
 import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
-import { NotificationEmailMode, NotificationEvent } from '@pharmaqms/shared';
+import { NotificationChannel, NotificationEmailMode, NotificationEvent, WhatsAppTemplateKey } from '@pharmaqms/shared';
 import { MongoMemoryServer } from 'mongodb-memory-server';
 import mongoose, { Model } from 'mongoose';
 import { AuditService } from '../../audit/audit.service';
@@ -18,6 +18,7 @@ describe('PLT-6 NotificationsService', () => {
   let auditEventModel: Model<AuditEventDocument>;
   let tenantModel: Model<TenantDocument>;
   const enqueueEmail = jest.fn();
+  const enqueueWhatsApp = jest.fn();
 
   beforeAll(async () => {
     mongod = await MongoMemoryServer.create();
@@ -33,7 +34,7 @@ describe('PLT-6 NotificationsService', () => {
       providers: [
         NotificationsService,
         AuditService,
-        { provide: NOTIFICATION_JOBS, useValue: { enqueueEmail } },
+        { provide: NOTIFICATION_JOBS, useValue: { enqueueEmail, enqueueWhatsApp } },
       ],
     }).compile();
 
@@ -56,6 +57,7 @@ describe('PLT-6 NotificationsService', () => {
     await auditEventModel.collection.deleteMany({});
     await tenantModel.collection.deleteMany({});
     enqueueEmail.mockClear();
+    enqueueWhatsApp.mockClear();
   });
 
   function id(): string {
@@ -172,5 +174,72 @@ describe('PLT-6 NotificationsService', () => {
 
     const all = await notificationsService.markRead(tenantId, userId, { all: true });
     expect(all.after.unread).toBe(0);
+  });
+
+  it('PLT-6-WA regression: a tenant with no notificationChannels setting still enqueues email exactly as before, and never enqueues WhatsApp — even when the event carries a WhatsApp template', async () => {
+    const tenantId = id();
+    // Deliberately no `settings` at all — the exact shape every pre-WhatsApp test/tenant has.
+    await tenantModel.create({ name: 'Legacy Co', slug: `legacy-${id()}` });
+
+    const created = await notificationsService.notify({
+      ...baseInput(tenantId, id()),
+      whatsapp: { templateKey: WhatsAppTemplateKey.TASK_ASSIGNED, params: ['Document', 'SOP-QA-001', 'Dept Head Review'] },
+    });
+
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    expect(enqueueEmail).toHaveBeenCalledWith(created!.id);
+    expect(enqueueWhatsApp).not.toHaveBeenCalled();
+    // The template is still recorded on the log entry (for visibility/debugging) even though it
+    // was never enqueued — but whatsappStatus stays null (nothing was ever attempted).
+    expect(created!.whatsappTemplateKey).toBe(WhatsAppTemplateKey.TASK_ASSIGNED);
+    expect(created!.whatsappStatus).toBeNull();
+  });
+
+  it('PLT-6-WA: a tenant with BOTH channels enabled enqueues email AND WhatsApp when the event has a template', async () => {
+    const tenant = await tenantModel.create({
+      name: 'Both Channels Inc',
+      slug: `both-${id()}`,
+      settings: { notificationChannels: [NotificationChannel.EMAIL, NotificationChannel.WHATSAPP] },
+    });
+
+    const created = await notificationsService.notify({
+      ...baseInput(tenant._id.toString(), id()),
+      whatsapp: { templateKey: WhatsAppTemplateKey.TASK_ASSIGNED, params: ['Document', 'SOP-QA-001', 'Dept Head Review'] },
+    });
+
+    expect(enqueueEmail).toHaveBeenCalledTimes(1);
+    expect(enqueueWhatsApp).toHaveBeenCalledTimes(1);
+    expect(enqueueWhatsApp).toHaveBeenCalledWith(created!.id);
+    expect(created!.whatsappStatus).toBe('pending');
+  });
+
+  it('PLT-6-WA: a WhatsApp-only tenant does not enqueue email but does enqueue WhatsApp', async () => {
+    const tenant = await tenantModel.create({
+      name: 'WhatsApp Only Ltd',
+      slug: `wa-only-${id()}`,
+      settings: { notificationChannels: [NotificationChannel.WHATSAPP] },
+    });
+
+    await notificationsService.notify({
+      ...baseInput(tenant._id.toString(), id()),
+      whatsapp: { templateKey: WhatsAppTemplateKey.APPROVAL_COMPLETED, params: ['Document', 'SOP-QA-001', 'Quinn Qahead'] },
+    });
+
+    expect(enqueueEmail).not.toHaveBeenCalled();
+    expect(enqueueWhatsApp).toHaveBeenCalledTimes(1);
+  });
+
+  it('PLT-6-WA: a tenant with the WhatsApp channel enabled but an event with NO template mapping never enqueues WhatsApp', async () => {
+    const tenant = await tenantModel.create({
+      name: 'Both Channels No Template',
+      slug: `no-template-${id()}`,
+      settings: { notificationChannels: [NotificationChannel.EMAIL, NotificationChannel.WHATSAPP] },
+    });
+
+    // REJECTED has no WhatsApp template mapping (see workflow-notification.listener.ts) — no
+    // `whatsapp` field is ever passed for it, mirroring real call sites.
+    await notificationsService.notify({ ...baseInput(tenant._id.toString(), id()), event: NotificationEvent.REJECTED });
+
+    expect(enqueueWhatsApp).not.toHaveBeenCalled();
   });
 });

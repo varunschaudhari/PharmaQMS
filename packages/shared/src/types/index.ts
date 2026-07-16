@@ -11,3 +11,5 @@ export * from './test-record';
 export * from './document';
 export * from './training';
 export * from './equipment';
+export * from './room';
+export * from './material-lot';

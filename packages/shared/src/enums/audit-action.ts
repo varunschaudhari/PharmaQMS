@@ -49,4 +49,19 @@ export enum AuditAction {
   PM_PLAN_UPSERTED = 'pm_plan_upserted',
   PM_TASK_GENERATED = 'pm_task_generated',
   PM_TASK_COMPLETED = 'pm_task_completed',
+  // QRX-1: recorded against the Room for cleaning-schedule changes and every cleaning-log entry
+  // (including amendments).
+  ROOM_CLEANING_SCHEDULE_UPSERTED = 'room_cleaning_schedule_upserted',
+  ROOM_CLEANING_LOGGED = 'room_cleaning_logged',
+  // QRX-2: recorded against the MaterialLot for its QA-disposition e-sign — a distinct name
+  // (rather than the generic STATUS_CHANGE) since every transition here is e-signed, same
+  // precedent as EQP-5's CALIBRATION_DISPOSITIONED.
+  MATERIAL_LOT_DISPOSITIONED = 'material_lot_dispositioned',
+  // TRN-6: recorded against the TrainingAssessment for question-bank edits/approval, and against
+  // the TrainingAssignment for every quiz attempt (pass or fail).
+  TRAINING_ASSESSMENT_UPSERTED = 'training_assessment_upserted',
+  TRAINING_ASSESSMENT_APPROVED = 'training_assessment_approved',
+  TRAINING_ASSESSMENT_ATTEMPTED = 'training_assessment_attempted',
+  // EQP-11: recorded against the CalibrationAgency for accreditation-certificate uploads.
+  CALIBRATION_CERTIFICATE_UPLOADED = 'calibration_certificate_uploaded',
 }

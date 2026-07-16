@@ -10,8 +10,20 @@ function escapeHtml(value: string): string {
 export function employeeRecordHtml(userFullName: string, assignments: TrainingAssignmentData[]): string {
   const rows = assignments
     .map((a) => {
-      const statusLabel = a.status === 'completed' ? 'Completed' : a.isOverdue ? 'Overdue' : 'Pending';
+      // TRN-6: "Retraining required" is derived (an assessment attempt exists, but hasn't passed
+      // yet), the same "derive, don't store" precedent as isOverdue below.
+      const statusLabel =
+        a.status === 'completed'
+          ? 'Completed'
+          : a.assessment && a.assessment.attemptCount > 0 && !a.assessment.passed
+            ? 'Retraining required'
+            : a.isOverdue
+              ? 'Overdue'
+              : 'Pending';
       const statusColor = a.status === 'completed' ? '#059669' : a.isOverdue ? '#dc2626' : '#64748b';
+      const assessmentCell = a.assessment
+        ? `${a.assessment.attemptCount} attempt(s)${a.assessment.bestScorePercentage !== null ? `, best ${a.assessment.bestScorePercentage}%` : ''}`
+        : '—';
       return `<tr>
         <td>${escapeHtml(a.docNumber)}</td>
         <td>${escapeHtml(a.documentTitle)}</td>
@@ -19,6 +31,7 @@ export function employeeRecordHtml(userFullName: string, assignments: TrainingAs
         <td style="color:${statusColor};font-weight:600">${statusLabel}</td>
         <td>${a.assignedAt.slice(0, 10)}</td>
         <td>${a.completedAt ? a.completedAt.slice(0, 10) : '—'}</td>
+        <td>${assessmentCell}</td>
       </tr>`;
     })
     .join('');
@@ -34,8 +47,8 @@ export function employeeRecordHtml(userFullName: string, assignments: TrainingAs
       <h1>Training Record — ${escapeHtml(userFullName)}</h1>
       <p class="meta">Generated ${new Date().toISOString().slice(0, 10)} — TRN-4 per-employee training record (SPEC.md §7.2)</p>
       <table>
-        <thead><tr><th>Document</th><th>Title</th><th>Version</th><th>Status</th><th>Assigned</th><th>Completed</th></tr></thead>
-        <tbody>${rows || '<tr><td colspan="6">No training assigned.</td></tr>'}</tbody>
+        <thead><tr><th>Document</th><th>Title</th><th>Version</th><th>Status</th><th>Assigned</th><th>Completed</th><th>Assessment</th></tr></thead>
+        <tbody>${rows || '<tr><td colspan="7">No training assigned.</td></tr>'}</tbody>
       </table>
     </body></html>`;
 }

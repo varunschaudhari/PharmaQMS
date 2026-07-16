@@ -16,6 +16,9 @@ import { EsignService } from '../../../platform/esign/esign.service';
 import { Signature, SignatureSchema } from '../../../platform/esign/schemas/signature.schema';
 import { SigningTokenUsage, SigningTokenUsageSchema } from '../../../platform/esign/schemas/signing-token-usage.schema';
 import { PdfRenderService } from '../../../common/pdf/pdf-render.service';
+import { NOTIFICATION_JOBS } from '../../../platform/notifications/jobs/notification-jobs.interface';
+import { NotificationsService } from '../../../platform/notifications/notifications.service';
+import { Notification, NotificationSchema } from '../../../platform/notifications/schemas/notification.schema';
 import { Department, DepartmentDocument, DepartmentSchema } from '../../../platform/tenant/schemas/department.schema';
 import { Tenant, TenantDocument, TenantSchema } from '../../../platform/tenant/schemas/tenant.schema';
 import {
@@ -23,7 +26,10 @@ import {
   DocumentTrainingTargetDocument,
   DocumentTrainingTargetSchema,
 } from '../schemas/document-training-target.schema';
+import { TrainingAssessmentAttempt, TrainingAssessmentAttemptSchema } from '../schemas/training-assessment-attempt.schema';
+import { TrainingAssessment, TrainingAssessmentSchema } from '../schemas/training-assessment.schema';
 import { TrainingAssignment, TrainingAssignmentDocument, TrainingAssignmentSchema } from '../schemas/training-assignment.schema';
+import { TrainingAssessmentService } from '../training-assessment.service';
 import { TrainingService } from '../training.service';
 
 describe('TRN-1 TRN-2 TRN-3 TRN-5 TrainingService', () => {
@@ -48,6 +54,8 @@ describe('TRN-1 TRN-2 TRN-3 TRN-5 TrainingService', () => {
         MongooseModule.forFeature([
           { name: TrainingAssignment.name, schema: TrainingAssignmentSchema },
           { name: DocumentTrainingTarget.name, schema: DocumentTrainingTargetSchema },
+          { name: TrainingAssessment.name, schema: TrainingAssessmentSchema },
+          { name: TrainingAssessmentAttempt.name, schema: TrainingAssessmentAttemptSchema },
           { name: User.name, schema: UserSchema },
           { name: Role.name, schema: RoleSchema },
           { name: Department.name, schema: DepartmentSchema },
@@ -55,9 +63,18 @@ describe('TRN-1 TRN-2 TRN-3 TRN-5 TrainingService', () => {
           { name: Signature.name, schema: SignatureSchema },
           { name: SigningTokenUsage.name, schema: SigningTokenUsageSchema },
           { name: AuditEvent.name, schema: AuditEventSchema },
+          { name: Notification.name, schema: NotificationSchema },
         ]),
       ],
-      providers: [TrainingService, EsignService, AuditService, PdfRenderService],
+      providers: [
+        TrainingService,
+        TrainingAssessmentService,
+        EsignService,
+        AuditService,
+        PdfRenderService,
+        NotificationsService,
+        { provide: NOTIFICATION_JOBS, useValue: { enqueueEmail: jest.fn() } },
+      ],
     }).compile();
 
     trainingService = moduleRef.get(TrainingService);

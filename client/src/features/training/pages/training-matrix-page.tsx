@@ -41,6 +41,8 @@ export function TrainingMatrixPage() {
               <th className="py-1 pr-4 font-medium">Assigned</th>
               <th className="py-1 pr-4 font-medium">Completed</th>
               <th className="py-1 pr-4 font-medium">Overdue</th>
+              <th className="py-1 pr-4 font-medium">Assessment attempts</th>
+              <th className="py-1 pr-4 font-medium">Failed (max attempts)</th>
             </tr>
           </thead>
           <tbody>
@@ -57,6 +59,10 @@ export function TrainingMatrixPage() {
                 <td className="py-2 pr-4">{entry.totalAssigned}</td>
                 <td className="py-2 pr-4">{entry.totalCompleted}</td>
                 <td className={`py-2 pr-4 ${entry.totalOverdue > 0 ? 'font-semibold text-red-600' : ''}`}>{entry.totalOverdue}</td>
+                <td className="py-2 pr-4">{entry.totalAssessmentAttempts}</td>
+                <td className={`py-2 pr-4 ${entry.totalAssessmentFailedMaxAttempts > 0 ? 'font-semibold text-red-600' : ''}`}>
+                  {entry.totalAssessmentFailedMaxAttempts}
+                </td>
               </tr>
             ))}
           </tbody>

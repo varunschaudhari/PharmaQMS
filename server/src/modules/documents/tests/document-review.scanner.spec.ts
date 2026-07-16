@@ -1,4 +1,4 @@
-import { NotificationEvent, type DocumentData } from '@pharmaqms/shared';
+import { NotificationEvent, WhatsAppTemplateKey, type DocumentData } from '@pharmaqms/shared';
 import { DocumentReviewScanner } from '../document-review.scanner';
 import type { DocumentsService } from '../documents.service';
 
@@ -47,6 +47,16 @@ describe('DOC-6 periodic-review due-date scanner', () => {
     });
     expect(findings[0].title).toContain('OVERDUE');
     expect(findings[0].body).toContain('SOP-QA-001');
+  });
+
+  it('PLT-6-WA: the finding carries a DOCUMENT_REVIEW_DUE WhatsApp template with docNumber/title/dueDate params', async () => {
+    const scanner = scannerWith([documentFixture({ nextReviewDate: '2026-07-01T00:00:00.000Z' })]);
+    const findings = await scanner.scan({ tenantId: 'tenant-1', runDate: '2026-07-11', now: new Date('2026-07-11T05:00:00.000Z') });
+
+    expect(findings[0].whatsapp).toEqual({
+      templateKey: WhatsAppTemplateKey.DOCUMENT_REVIEW_DUE,
+      params: ['SOP-QA-001', 'Cleaning of pH meters', '2026-07-01'],
+    });
   });
 
   it('DOC-6: a document due within the window (but not past) maps to DUE_SOON, with a dedupeKey stable across daily runs', async () => {

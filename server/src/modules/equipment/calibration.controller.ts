@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Res, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { PermissionAction, PermissionModule, type AuthenticatedUser } from '@pharmaqms/shared';
+import type { Response } from 'express';
 import {
   CurrentSigningContext,
   type SigningContext,
@@ -68,6 +69,22 @@ export class CalibrationController {
   async listRecords(@CurrentTenant() tenantId: string, @Param('id') id: string) {
     const data = await this.calibrationService.listRecords(tenantId, id);
     return { data };
+  }
+
+  // EQP-11 (e): the certificate registry needs a way to open the document — mirrors EQP-8's
+  // qualification protocol/report download pattern.
+  @RequirePermission(PermissionModule.EQUIPMENT, PermissionAction.VIEW)
+  @Get(':id/calibration-records/:recordId/certificate')
+  async certificateFile(
+    @CurrentTenant() tenantId: string,
+    @Param('id') id: string,
+    @Param('recordId') recordId: string,
+    @Res() res: Response,
+  ): Promise<void> {
+    const file = await this.calibrationService.getCertificateFile(tenantId, id, recordId);
+    res.setHeader('Content-Type', file.contentType);
+    res.setHeader('Content-Disposition', `inline; filename="${file.fileName.replace(/"/g, '')}"`);
+    res.send(file.buffer);
   }
 
   @RequirePermission(PermissionModule.EQUIPMENT, PermissionAction.EDIT)

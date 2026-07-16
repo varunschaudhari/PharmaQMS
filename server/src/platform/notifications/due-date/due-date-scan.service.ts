@@ -69,6 +69,7 @@ export class DueDateScanService {
             body: finding.body,
             dedupeKey: finding.dedupeKey,
             actor: null, // system-generated
+            whatsapp: finding.whatsapp,
           });
           if (notification) {
             created += 1;

@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { NotificationEvent } from '@pharmaqms/shared';
+import { NotificationEvent, WhatsAppDeliveryStatus, WhatsAppTemplateKey } from '@pharmaqms/shared';
 import { HydratedDocument, SchemaTypes, Types } from 'mongoose';
 
 export type NotificationDocument = HydratedDocument<Notification>;
@@ -45,6 +45,34 @@ export class Notification {
   // daily digest job in digest mode). Null = not yet emailed.
   @Prop({ type: Date, default: null })
   emailedAt!: Date | null;
+
+  // PLT-6-WA: null when this notification's event has no WhatsApp template mapping — non-null
+  // only when notify() was called with a `whatsapp` payload (see NotifyInput).
+  @Prop({ type: String, enum: [...Object.values(WhatsAppTemplateKey), null], default: null })
+  whatsappTemplateKey!: WhatsAppTemplateKey | null;
+
+  @Prop({ type: [String], default: null })
+  whatsappTemplateParams!: string[] | null;
+
+  // Set to PENDING only when actually enqueued (tenant has the WhatsApp channel enabled); stays
+  // null otherwise — see WhatsAppDeliveryService for the SENT/FAILED transitions and the webhook
+  // controller for the later DELIVERED/READ transition.
+  @Prop({ type: String, enum: [...Object.values(WhatsAppDeliveryStatus), null], default: null })
+  whatsappStatus!: WhatsAppDeliveryStatus | null;
+
+  @Prop({ type: Date, default: null })
+  whatsappSentAt!: Date | null;
+
+  // Meta's message id for this send — the join key the delivery-status webhook matches on.
+  @Prop({ type: String, default: null, index: true })
+  whatsappProviderMessageId!: string | null;
+
+  // Raw provider response/error, kept for support/debugging (never displayed to end users).
+  @Prop({ type: SchemaTypes.Mixed, default: null })
+  whatsappProviderResponse!: unknown | null;
+
+  @Prop({ type: Number, default: 0 })
+  whatsappAttempts!: number;
 }
 
 export const NotificationSchema = SchemaFactory.createForClass(Notification);

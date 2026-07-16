@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { CalibrationAgencyStatus } from '../enums/calibration-agency';
 import {
   CalibrationDispositionOutcome,
   CalibrationResult,
@@ -14,6 +15,10 @@ export const createEquipmentRequestSchema = z.object({
   modelName: z.string().optional(),
   serialNumber: z.string().optional(),
   location: z.string().min(1, 'location is required'),
+  // QRX-1: optional Room reference. `location` (free-text) is kept regardless — a room-less
+  // equipment record still needs a human-readable location, and existing records only have this
+  // field until the migration (server/src/scripts/migrate-equipment-rooms.ts) backfills roomId.
+  roomId: z.string().min(1).nullable().optional(),
   departmentId: z.string().min(1, 'departmentId is required'),
   isGmpCritical: z.coerce.boolean().default(false),
   installDate: z.string().optional(),
@@ -26,6 +31,7 @@ export const updateEquipmentRequestSchema = z.object({
   modelName: z.string().optional(),
   serialNumber: z.string().optional(),
   location: z.string().min(1).optional(),
+  roomId: z.string().min(1).nullable().optional(),
   isGmpCritical: z.coerce.boolean().optional(),
   installDate: z.string().optional(),
 });
@@ -38,16 +44,55 @@ export const transitionEquipmentStatusRequestSchema = z.object({
 });
 export type TransitionEquipmentStatusRequest = z.infer<typeof transitionEquipmentStatusRequestSchema>;
 
-// EQP-4: recurring calibration schedule (create or replace — one active schedule per equipment).
+// EQP-4/EQP-11: recurring calibration schedule (create or replace — one active schedule per
+// equipment). `agencyId` is only meaningful when agencyType is 'external' (re-checked server-side).
 export const createCalibrationScheduleRequestSchema = z.object({
   frequencyMonths: z.coerce.number().int().min(1).max(120),
   parameters: z.string().min(1, 'parameters is required'),
   toleranceClass: z.string().min(1, 'toleranceClass is required'),
   agencyType: z.enum(['internal', 'external']),
   agencyName: z.string().optional(),
+  agencyId: z.string().min(1).optional(),
   nextDueDate: z.string().min(1, 'nextDueDate is required'),
 });
 export type CreateCalibrationScheduleRequest = z.infer<typeof createCalibrationScheduleRequestSchema>;
+
+// EQP-11: external calibration agency master.
+export const createCalibrationAgencyRequestSchema = z.object({
+  name: z.string().min(1, 'name is required'),
+  contactName: z.string().optional(),
+  contactEmail: z.string().email().optional().or(z.literal('')),
+  contactPhone: z.string().optional(),
+  accreditationNumber: z.string().optional(),
+  accreditationValidUntil: z.string().optional(),
+});
+export type CreateCalibrationAgencyRequest = z.infer<typeof createCalibrationAgencyRequestSchema>;
+
+export const updateCalibrationAgencyRequestSchema = z.object({
+  name: z.string().min(1).optional(),
+  contactName: z.string().optional(),
+  contactEmail: z.string().email().optional().or(z.literal('')),
+  contactPhone: z.string().optional(),
+  accreditationNumber: z.string().optional(),
+  accreditationValidUntil: z.string().optional(),
+});
+export type UpdateCalibrationAgencyRequest = z.infer<typeof updateCalibrationAgencyRequestSchema>;
+
+// EQP-11: the only way status changes — never a direct field write (CLAUDE.md transition maps).
+export const transitionCalibrationAgencyStatusRequestSchema = z.object({
+  status: z.nativeEnum(CalibrationAgencyStatus),
+});
+export type TransitionCalibrationAgencyStatusRequest = z.infer<typeof transitionCalibrationAgencyStatusRequestSchema>;
+
+// EQP-11 (e): certificate registry filters — every filter optional (an empty query returns
+// everything for the tenant).
+export const listCalibrationCertificatesQuerySchema = z.object({
+  agencyId: z.string().min(1).optional(),
+  equipmentId: z.string().min(1).optional(),
+  fromDate: z.string().optional(),
+  toDate: z.string().optional(),
+});
+export type ListCalibrationCertificatesQuery = z.infer<typeof listCalibrationCertificatesQuerySchema>;
 
 // EQP-4: recording a performed calibration (multipart — the certificate travels alongside these
 // fields, so numeric/boolean fields arrive as strings and are coerced).

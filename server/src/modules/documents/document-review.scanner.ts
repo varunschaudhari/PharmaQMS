@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { NotificationEvent } from '@pharmaqms/shared';
+import { NotificationEvent, documentReviewDueWhatsAppParams } from '@pharmaqms/shared';
 import type {
   DueDateFinding,
   DueDateScanContext,
@@ -34,6 +34,7 @@ export class DocumentReviewScanner implements DueDateScanner {
         body: `${document.docNumber} — ${document.title} is due for periodic review on ${dueDate}. Outcome: reaffirm or revise (SPEC DOC-6).`,
         // Stable per document per due date: a reaffirm/revision moves the date and re-arms it.
         dedupeKey: `doc-review:${event}:${document.id}:${dueDate}`,
+        whatsapp: documentReviewDueWhatsAppParams(document.docNumber, document.title, dueDate),
       };
     });
   }

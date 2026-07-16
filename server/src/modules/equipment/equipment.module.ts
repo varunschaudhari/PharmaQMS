@@ -10,6 +10,9 @@ import { PdfModule } from '../../common/pdf/pdf.module';
 import { StorageModule } from '../../common/storage/storage.module';
 import { Department, DepartmentSchema } from '../../platform/tenant/schemas/department.schema';
 import { Tenant, TenantSchema } from '../../platform/tenant/schemas/tenant.schema';
+import { CalibrationAgencyController } from './calibration-agency.controller';
+import { CalibrationAgencyExpiryScanner } from './calibration-agency-expiry.scanner';
+import { CalibrationAgencyService } from './calibration-agency.service';
 import { CalibrationController } from './calibration.controller';
 import { CalibrationService } from './calibration.service';
 import { EquipmentCalibrationScanner } from './equipment-calibration.scanner';
@@ -27,6 +30,7 @@ import { PmController } from './pm.controller';
 import { PmService } from './pm.service';
 import { QualificationController } from './qualification.controller';
 import { QualificationService } from './qualification.service';
+import { CalibrationAgency, CalibrationAgencySchema } from './schemas/calibration-agency.schema';
 import { CalibrationRecord, CalibrationRecordSchema } from './schemas/calibration-record.schema';
 import { CalibrationSchedule, CalibrationScheduleSchema } from './schemas/calibration-schedule.schema';
 import { Equipment, EquipmentSchema } from './schemas/equipment.schema';
@@ -55,6 +59,7 @@ import { QualificationRecord, QualificationRecordSchema } from './schemas/qualif
       { name: QualificationRecord.name, schema: QualificationRecordSchema },
       { name: PmPlan.name, schema: PmPlanSchema },
       { name: PmTask.name, schema: PmTaskSchema },
+      { name: CalibrationAgency.name, schema: CalibrationAgencySchema },
     ]),
     NumberingModule,
     QrModule,
@@ -65,6 +70,7 @@ import { QualificationRecord, QualificationRecordSchema } from './schemas/qualif
   ],
   controllers: [
     CalibrationController,
+    CalibrationAgencyController,
     MaintenanceController,
     LogbookController,
     QualificationController,
@@ -75,7 +81,9 @@ import { QualificationRecord, QualificationRecordSchema } from './schemas/qualif
   providers: [
     EquipmentService,
     CalibrationService,
+    CalibrationAgencyService,
     EquipmentCalibrationScanner,
+    CalibrationAgencyExpiryScanner,
     MaintenanceService,
     LogbookService,
     QualificationService,
@@ -84,7 +92,7 @@ import { QualificationRecord, QualificationRecordSchema } from './schemas/qualif
     EquipmentPmScanner,
     EquipmentHistoryReportService,
   ],
-  exports: [EquipmentService, CalibrationService, MaintenanceService, LogbookService, QualificationService, PmService],
+  exports: [EquipmentService, CalibrationService, CalibrationAgencyService, MaintenanceService, LogbookService, QualificationService, PmService],
 })
 export class EquipmentModule implements OnModuleInit {
   constructor(
@@ -93,13 +101,15 @@ export class EquipmentModule implements OnModuleInit {
     private readonly calibrationScanner: EquipmentCalibrationScanner,
     private readonly qualificationScanner: EquipmentQualificationScanner,
     private readonly pmScanner: EquipmentPmScanner,
+    private readonly calibrationAgencyExpiryScanner: CalibrationAgencyExpiryScanner,
   ) {}
 
-  // EQP-4/EQP-8/EQP-9: register the calibration/requalification/PM due-date scanners into the
-  // PLT-6 daily-scan framework.
+  // EQP-4/EQP-8/EQP-9/EQP-11: register the calibration/requalification/PM/agency-accreditation
+  // due-date scanners into the PLT-6 daily-scan framework.
   onModuleInit(): void {
     this.scannerRegistry.register(this.calibrationScanner);
     this.scannerRegistry.register(this.qualificationScanner);
     this.scannerRegistry.register(this.pmScanner);
+    this.scannerRegistry.register(this.calibrationAgencyExpiryScanner);
   }
 }

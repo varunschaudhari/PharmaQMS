@@ -2,6 +2,7 @@ import { getModelToken, MongooseModule } from '@nestjs/mongoose';
 import { Test, TestingModule } from '@nestjs/testing';
 import {
   NotificationEvent,
+  WhatsAppTemplateKey,
   WorkflowAction,
   WorkflowInstanceStatus,
   type WorkflowStepChangedEvent,
@@ -137,6 +138,10 @@ describe('PLT-6 workflow event -> notification mapping', () => {
     expect(recipientIds).toEqual(users.map((u) => u._id.toString()).sort());
     expect(notifications[0].title).toContain('SOP-QA-001');
     expect(notifications[0].body).toContain('Dept Head Review');
+
+    // PLT-6-WA: task_assigned notifications carry a TASK_ASSIGNED WhatsApp template.
+    expect(notifications[0].whatsappTemplateKey).toBe(WhatsAppTemplateKey.TASK_ASSIGNED);
+    expect(notifications[0].whatsappTemplateParams).toEqual(['Document', 'SOP-QA-001', 'Dept Head Review']);
   });
 
   it('PLT-6: a non-final approval maps to task_assigned for the NEXT step\'s role', async () => {
@@ -184,6 +189,10 @@ describe('PLT-6 workflow event -> notification mapping', () => {
     expect(notifications[0].event).toBe(NotificationEvent.APPROVED);
     expect(notifications[0].userId.toString()).toBe(submitterId);
     expect(notifications[0].body).toContain('Quinn Qahead');
+
+    // PLT-6-WA: the APPROVED notification carries an APPROVAL_COMPLETED WhatsApp template.
+    expect(notifications[0].whatsappTemplateKey).toBe(WhatsAppTemplateKey.APPROVAL_COMPLETED);
+    expect(notifications[0].whatsappTemplateParams).toEqual(['Document', 'SOP-QA-001', 'Quinn Qahead']);
   });
 
   it('PLT-6: reject back to DRAFT maps to a rejected notification (with the comment) for the submitter only', async () => {
@@ -208,6 +217,9 @@ describe('PLT-6 workflow event -> notification mapping', () => {
     expect(notifications[0].event).toBe(NotificationEvent.REJECTED);
     expect(notifications[0].userId.toString()).toBe(submitterId);
     expect(notifications[0].body).toContain('Missing signature page.');
+
+    // PLT-6-WA: REJECTED is not one of the 5 highest-value WhatsApp-mapped events — no template.
+    expect(notifications[0].whatsappTemplateKey).toBeNull();
   });
 
   it('PLT-6: reject to an EARLIER STEP notifies the submitter (rejected) AND re-assigns that step\'s role (task_assigned)', async () => {

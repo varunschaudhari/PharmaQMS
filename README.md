@@ -40,6 +40,14 @@ validation-pack/   # regulatory deliverable (changelog, traceability, docs)
    cp client/.env.example client/.env
    ```
 
+4. Seed the local database (dev only — creates the demo tenant, roles, users, numbering schemes, and the 2-step approval workflow template; idempotent, safe to re-run):
+
+   ```sh
+   npm run seed
+   ```
+
+   All seeded users share the password `Demo123!` (also the e-signature credential). Log in as `admin@demo.local` (Tenant Admin + platform admin), `qa.head@demo.local`, `qa.exec@demo.local`, `prod.head@demo.local`, `operator@demo.local`, or `maintenance@demo.local`. The demo tenant id matches `VITE_DEFAULT_TENANT_ID` in `client/.env`, so the client works with no further configuration.
+
 ## Running
 
 | Command | What it does |

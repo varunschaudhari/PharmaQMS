@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { CalibrationStatus, NotificationEvent, deriveCalibrationStatus } from '@pharmaqms/shared';
+import {
+  CalibrationStatus,
+  NotificationEvent,
+  calibrationDueWhatsAppParams,
+  deriveCalibrationStatus,
+} from '@pharmaqms/shared';
 import { Model } from 'mongoose';
 import type {
   DueDateFinding,
@@ -55,15 +60,17 @@ export class EquipmentCalibrationScanner implements DueDateScanner {
       }
 
       const dueDateKey = schedule.nextDueDate.toISOString().slice(0, 10);
-      const event = status === CalibrationStatus.OVERDUE ? NotificationEvent.OVERDUE : NotificationEvent.DUE_SOON;
+      const overdue = status === CalibrationStatus.OVERDUE;
+      const event = overdue ? NotificationEvent.OVERDUE : NotificationEvent.DUE_SOON;
       findings.push({
         userId: headUserId,
         event,
         entityType: EQUIPMENT_ENTITY_TYPE,
         entityId: equipment._id.toString(),
-        title: `Calibration ${status === CalibrationStatus.OVERDUE ? 'overdue' : 'due soon'}: ${equipment.equipmentCode}`,
-        body: `${equipment.equipmentCode} — ${equipment.name} calibration is ${status === CalibrationStatus.OVERDUE ? 'overdue' : 'due soon'} (due ${dueDateKey}).`,
+        title: `Calibration ${overdue ? 'overdue' : 'due soon'}: ${equipment.equipmentCode}`,
+        body: `${equipment.equipmentCode} — ${equipment.name} calibration is ${overdue ? 'overdue' : 'due soon'} (due ${dueDateKey}).`,
         dedupeKey: `equipment-calibration:${equipment._id.toString()}:${dueDateKey}:${event}`,
+        whatsapp: calibrationDueWhatsAppParams(equipment.equipmentCode, equipment.name, dueDateKey, overdue),
       });
     }
     return findings;

@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { NotificationEvent } from '@pharmaqms/shared';
+import { NotificationEvent, trainingOverdueWhatsAppParams } from '@pharmaqms/shared';
 import { Model } from 'mongoose';
 import type {
   DueDateFinding,
@@ -45,6 +45,7 @@ export class TrainingOverdueScanner implements DueDateScanner {
     for (const assignment of overdue) {
       const dueDateKey = assignment.dueDate ? assignment.dueDate.slice(0, 10) : context.runDate;
       const dedupeKey = `training-overdue:${assignment.id}:${dueDateKey}`;
+      const whatsapp = trainingOverdueWhatsAppParams(assignment.userFullName, assignment.docNumber, assignment.documentTitle);
 
       findings.push({
         userId: assignment.userId,
@@ -54,6 +55,7 @@ export class TrainingOverdueScanner implements DueDateScanner {
         title: `Training overdue: ${assignment.docNumber}`,
         body: `${assignment.docNumber} — ${assignment.documentTitle} (v${assignment.versionLabel}) read-and-understood training is overdue.`,
         dedupeKey,
+        whatsapp,
       });
 
       const departmentId = departmentIdByUser.get(assignment.userId);
@@ -67,6 +69,7 @@ export class TrainingOverdueScanner implements DueDateScanner {
           title: `Team training overdue: ${assignment.docNumber}`,
           body: `${assignment.userFullName} has overdue read-and-understood training for ${assignment.docNumber} — ${assignment.documentTitle}.`,
           dedupeKey,
+          whatsapp,
         });
       }
     }

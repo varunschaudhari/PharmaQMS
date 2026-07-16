@@ -1,3 +1,4 @@
+import type { CalibrationAgencyStatus } from '../enums/calibration-agency';
 import type {
   CalibrationRecordStatus,
   CalibrationResult,
@@ -10,8 +11,13 @@ import type {
 } from '../enums/equipment';
 import type { CleaningType, LogbookEntryType, MaintenanceTaskStatus } from '../enums/logbook';
 
-// EQP-1: equipment master (SPEC.md §7.3). `location` is free-text in v1 — a Room master
-// (QRX-1) is v1.5/out of scope for these sessions, so there is no Room entity to reference yet.
+// EQP-1: equipment master (SPEC.md §7.3). `location` remains free-text (kept for equipment that
+// predates QRX-1, and as a fallback label) — `roomId` optionally links to the QRX-1 Room master
+// once one exists for that location (see server/src/scripts/migrate-equipment-rooms.ts for the
+// one-time backfill of existing data). No cross-module existence validation is performed on
+// roomId — it is an opaque reference, the same "polymorphic reference, no service-to-service
+// dependency" pattern already used by AuditEvent/Signature/Notification/WorkflowInstance/QrCode's
+// entityType+entityId (CLAUDE.md: business modules never depend on each other directly).
 export interface EquipmentData {
   id: string;
   tenantId: string;
@@ -22,6 +28,7 @@ export interface EquipmentData {
   modelName: string | null;
   serialNumber: string | null;
   location: string;
+  roomId: string | null;
   departmentId: string;
   isGmpCritical: boolean;
   status: EquipmentStatus;
@@ -30,7 +37,10 @@ export interface EquipmentData {
   createdAt: string;
 }
 
-// EQP-4: the recurring calibration schedule — one active schedule per equipment.
+// EQP-4/EQP-11: the recurring calibration schedule — one active schedule per equipment.
+// `agencyId` optionally links to a CalibrationAgency master record (EQP-11) when
+// agencyType === 'external'; `agencyName` is kept as a free-text fallback for schedules created
+// before EQP-11 existed, or for an external agency the tenant hasn't onboarded as a master record.
 export interface CalibrationScheduleData {
   id: string;
   tenantId: string;
@@ -40,7 +50,59 @@ export interface CalibrationScheduleData {
   toleranceClass: string;
   agencyType: 'internal' | 'external';
   agencyName: string | null;
+  agencyId: string | null;
   nextDueDate: string;
+}
+
+// EQP-11: an external calibration service provider — a same-module master record (CalibrationAgency
+// lives in the Equipment module alongside CalibrationSchedule, so `id` here IS a real Mongoose
+// reference target, unlike QRX-1's cross-module opaque roomId).
+export interface CalibrationAgencyCertificateData {
+  id: string;
+  fileName: string;
+  contentType: string;
+  uploadedAt: string;
+}
+
+export interface CalibrationAgencyData {
+  id: string;
+  tenantId: string;
+  name: string;
+  contactName: string | null;
+  contactEmail: string | null;
+  contactPhone: string | null;
+  // e.g. an NABL accreditation number.
+  accreditationNumber: string | null;
+  accreditationValidUntil: string | null;
+  status: CalibrationAgencyStatus;
+  certificates: CalibrationAgencyCertificateData[];
+  createdAt: string;
+}
+
+// EQP-11 (c): one row of the agency-wise due list QA sends the agency each month.
+export interface CalibrationDueByAgencyEntryData {
+  agencyId: string;
+  agencyName: string;
+  equipmentId: string;
+  equipmentCode: string;
+  equipmentName: string;
+  calibrationStatus: CalibrationStatus;
+  nextDueDate: string;
+  // EQP-11 (d): a warning only — never blocks recording, QA decides.
+  accreditationExpired: boolean;
+}
+
+// EQP-11 (e): one row of the certificate registry, filterable by agency/equipment/date.
+export interface CalibrationCertificateRegistryEntryData {
+  recordId: string;
+  equipmentId: string;
+  equipmentCode: string;
+  equipmentName: string;
+  agencyId: string | null;
+  agencyName: string | null;
+  performedDate: string;
+  result: CalibrationResult;
+  certificateFileName: string;
 }
 
 // EQP-4/EQP-5: one performed calibration event — immutable except its QA sign-off fields, which

@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import { SignatureDialog } from '../../../components/ui/signature-dialog';
 import { useAuth } from '../../auth/context/auth-context';
 import { extractErrorMessage } from '../../../lib/api-error';
+import { fetchCalibrationAgencies } from '../../../lib/calibration-agency-api';
 import {
   dispositionCalibrationRecord,
   fetchCalibrationRecords,
@@ -51,6 +52,8 @@ export function CalibrationPanel({ equipmentId }: { equipmentId: string }) {
     queryKey: ['calibration-records', equipmentId],
     queryFn: () => fetchCalibrationRecords(equipmentId),
   });
+  // EQP-11: agencies are an opaque picker convenience — the server re-validates agencyId exists.
+  const { data: agencies } = useQuery({ queryKey: ['calibration-agencies'], queryFn: fetchCalibrationAgencies });
 
   function invalidate(): void {
     void queryClient.invalidateQueries({ queryKey: ['calibration-schedule', equipmentId] });
@@ -66,6 +69,7 @@ export function CalibrationPanel({ equipmentId }: { equipmentId: string }) {
       toleranceClass: string;
       agencyType: 'internal' | 'external';
       agencyName?: string;
+      agencyId?: string;
       nextDueDate: string;
     }) => upsertCalibrationSchedule(equipmentId, input),
     onSuccess: invalidate,
@@ -122,6 +126,7 @@ export function CalibrationPanel({ equipmentId }: { equipmentId: string }) {
       toleranceClass: String(form.get('toleranceClass') ?? ''),
       agencyType: form.get('agencyType') === 'external' ? 'external' : 'internal',
       agencyName: String(form.get('agencyName') ?? '') || undefined,
+      agencyId: String(form.get('agencyId') ?? '') || undefined,
       nextDueDate: String(form.get('nextDueDate') ?? ''),
     });
   }
@@ -170,7 +175,15 @@ export function CalibrationPanel({ equipmentId }: { equipmentId: string }) {
               <option value="internal">Internal</option>
               <option value="external">External</option>
             </select>
-            <input name="agencyName" placeholder="Agency name (if external)" defaultValue={schedule?.agencyName ?? ''} className="rounded border border-slate-300 px-2 py-1" />
+            <input name="agencyName" placeholder="Agency name (free-text, if external)" defaultValue={schedule?.agencyName ?? ''} className="rounded border border-slate-300 px-2 py-1" />
+            <select name="agencyId" aria-label="Calibration agency (EQP-11)" defaultValue={schedule?.agencyId ?? ''} className="col-span-2 rounded border border-slate-300 px-2 py-1">
+              <option value="">No linked agency master record</option>
+              {(agencies ?? []).map((agency) => (
+                <option key={agency.id} value={agency.id}>
+                  {agency.name}
+                </option>
+              ))}
+            </select>
             <input
               name="nextDueDate"
               aria-label="Next due date"

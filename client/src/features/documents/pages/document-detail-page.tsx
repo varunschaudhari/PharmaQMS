@@ -19,6 +19,7 @@ import {
   updateDocumentDistribution,
 } from '../../../lib/documents-api';
 import { fetchSignatures } from '../../../lib/esign-api';
+import { TrainingAssessmentPanel } from '../../training/components/training-assessment-panel';
 
 // DOC-1/DOC-2/DOC-3/DOC-7: document detail — metadata, version history, workflow stepper,
 // signature manifest, mandatory HistoryTab, e-signed obsolescence.
@@ -280,6 +281,10 @@ export function DocumentDetailPage() {
           </div>
         </div>
       </section>
+
+      {latest && (
+        <TrainingAssessmentPanel documentId={document.id} versionId={latest.id} versionLabel={latest.versionLabel} docNumber={document.docNumber} />
+      )}
 
       <section className="rounded border border-slate-200 bg-white p-4">
         <HistoryTab entityType="Document" entityId={document.id} />
