@@ -122,7 +122,13 @@ export function MaintenanceTaskPanel({ equipmentId }: { equipmentId: string }) {
       )}
 
       {verifyingTaskId && (
-        <SignatureDialog meaning={SignatureMeaning.VERIFIED_BY} onSign={(token) => verifyMutation.mutateAsync(token)} onCancel={() => setVerifyingTaskId(null)} />
+        <SignatureDialog
+          meaning={SignatureMeaning.VERIFIED_BY}
+          onSign={async (token) => {
+            await verifyMutation.mutateAsync(token);
+          }}
+          onCancel={() => setVerifyingTaskId(null)}
+        />
       )}
     </section>
   );

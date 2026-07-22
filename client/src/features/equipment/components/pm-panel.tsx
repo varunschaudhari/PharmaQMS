@@ -141,7 +141,13 @@ export function PmPanel({ equipmentId }: { equipmentId: string }) {
         </div>
       )}
       {completingTaskId && completionStep === 'sign' && (
-        <SignatureDialog meaning={SignatureMeaning.PM_COMPLETED} onSign={(token) => completeMutation.mutateAsync(token)} onCancel={closeCompletionDialog} />
+        <SignatureDialog
+          meaning={SignatureMeaning.PM_COMPLETED}
+          onSign={async (token) => {
+            await completeMutation.mutateAsync(token);
+          }}
+          onCancel={closeCompletionDialog}
+        />
       )}
     </section>
   );

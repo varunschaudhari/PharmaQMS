@@ -266,7 +266,9 @@ export function CalibrationPanel({ equipmentId }: { equipmentId: string }) {
       {signingRecordId && (
         <SignatureDialog
           meaning={SignatureMeaning.VERIFIED_BY}
-          onSign={(token) => verifyMutation.mutateAsync(token)}
+          onSign={async (token) => {
+            await verifyMutation.mutateAsync(token);
+          }}
           onCancel={() => setSigningRecordId(null)}
         />
       )}
@@ -309,7 +311,9 @@ export function CalibrationPanel({ equipmentId }: { equipmentId: string }) {
       {dispositionRecordId && dispositionStep === 'sign' && (
         <SignatureDialog
           meaning={SignatureMeaning.QA_DISPOSITION}
-          onSign={(token) => dispositionMutation.mutateAsync(token)}
+          onSign={async (token) => {
+            await dispositionMutation.mutateAsync(token);
+          }}
           onCancel={closeDispositionDialog}
         />
       )}

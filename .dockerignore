@@ -1,0 +1,16 @@
+**/node_modules
+**/dist
+**/build
+**/coverage
+**/.vite
+**/.data
+.git
+.claude
+validation-pack
+docs
+*.log
+**/*.tsbuildinfo
+.env
+.env.local
+**/.env
+**/.env.local

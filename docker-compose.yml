@@ -15,6 +15,41 @@ services:
     volumes:
       - redis-data:/data
 
+  server:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    ports:
+      - '4000:4000'
+    # Reuses the developer's own server/.env (secrets, JWT TTLs, notification config, etc.);
+    # MONGODB_URI/REDIS_URL below override that file's `localhost` values, since inside this
+    # compose network the databases are reachable by service name, not localhost.
+    env_file:
+      - server/.env
+    environment:
+      PORT: 4000
+      MONGODB_URI: mongodb://mongo:27017/pharmaqms
+      REDIS_URL: redis://redis:6379
+    depends_on:
+      - mongo
+      - redis
+
+  client:
+    build:
+      context: .
+      dockerfile: client/Dockerfile
+      args:
+        # Baked into the static bundle at build time — must be reachable from the user's
+        # browser (so `server`'s published host port, not the container's service name).
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:4000/api/v1}
+        VITE_DEFAULT_TENANT_ID: ${VITE_DEFAULT_TENANT_ID:-}
+    restart: unless-stopped
+    ports:
+      - '5174:80'
+    depends_on:
+      - server
+
 volumes:
   mongo-data:
   redis-data:

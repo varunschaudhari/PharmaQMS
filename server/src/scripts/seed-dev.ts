@@ -11,27 +11,49 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { getModelToken } from '@nestjs/mongoose';
 import {
+  DocumentType,
+  MaterialLotStatus,
   PermissionAction,
   PermissionModule,
+  RoomClassification,
+  RoomCleaningFrequency,
   SignatureMeaning,
+  WorkflowAction,
+  type CreateCalibrationScheduleRequest,
+  type CreateEquipmentRequest,
+  type CreateMaterialLotRequest,
+  type CreateRoomRequest,
   type PermissionKey,
+  type UpsertRoomCleaningScheduleRequest,
 } from '@pharmaqms/shared';
 import { Model, Types } from 'mongoose';
+import type { SigningContext } from '../common/decorators/current-signing-context.decorator';
 import { AppModule } from '../app.module';
 import { TEST_RECORD_ENTITY_TYPE, TEST_RECORD_NUMBERING_TYPE } from '../demo/test-record/test-record.service';
 import { DOCUMENT_VERSION_ENTITY_TYPE } from '../modules/documents/document-entity-types';
+import { DocumentEntity, DocumentEntityDocument } from '../modules/documents/schemas/document.schema';
+import { DocumentsService, type DocumentActor, type UploadedDocumentFile } from '../modules/documents/documents.service';
+import { CalibrationService, type CalibrationActor } from '../modules/equipment/calibration.service';
 import { EQUIPMENT_NUMBERING_TYPE } from '../modules/equipment/equipment-entity-types';
+import { Equipment, EquipmentDocument } from '../modules/equipment/schemas/equipment.schema';
+import { EquipmentService } from '../modules/equipment/equipment.service';
 import { MATERIAL_LOT_NUMBERING_TYPE } from '../modules/materials/material-lot-entity-types';
+import { MaterialLot, MaterialLotDocument } from '../modules/materials/schemas/material-lot.schema';
+import { MaterialLotService } from '../modules/materials/material-lot.service';
 import { ROOM_NUMBERING_TYPE } from '../modules/rooms/room-entity-types';
+import { Room, RoomDocument } from '../modules/rooms/schemas/room.schema';
+import { RoomCleaningService, type RoomCleaningActor } from '../modules/rooms/room-cleaning.service';
+import { RoomService } from '../modules/rooms/room.service';
 import { Role, RoleDocument } from '../platform/auth/schemas/role.schema';
 import { User, UserDocument } from '../platform/auth/schemas/user.schema';
+import { EsignService } from '../platform/esign/esign.service';
 import { NumberingService } from '../platform/numbering/numbering.service';
 import { NumberingScheme, NumberingSchemeDocument } from '../platform/numbering/schemas/numbering-scheme.schema';
 import { DepartmentService } from '../platform/tenant/department.service';
 import { Tenant, TenantDocument } from '../platform/tenant/schemas/tenant.schema';
 import { TenantService } from '../platform/tenant/tenant.service';
 import { UserAdminService } from '../platform/tenant/user-admin.service';
-import { WorkflowService } from '../platform/workflow/workflow.service';
+import { WorkflowService, type WorkflowActor } from '../platform/workflow/workflow.service';
 
 // Must match VITE_DEFAULT_TENANT_ID in client/.env — the client pins its login tenant at build
 // time until slug-based tenant resolution lands (see client auth-context.tsx), so seeding this
@@ -131,9 +153,19 @@ const USERS: Array<{ email: string; fullName: string; role: string; department: 
   { email: 'qa.head@demo.local', fullName: 'Qamar Hashmi', role: 'QA Head', department: 'QA' },
   { email: 'qa.exec@demo.local', fullName: 'Esha Qureshi', role: 'QA Executive', department: 'QA' },
   { email: 'prod.head@demo.local', fullName: 'Prakash Hegde', role: 'Dept Head', department: 'PROD' },
+  // A second Dept Head holder (in QC rather than PROD) — "Dept Head" is one role shared across
+  // departments in this permission model (not a per-department role), so both users see the same
+  // pending-review queue. Added so the approval-flow demo has more than one reviewer to log in as.
+  { email: 'qc.head@demo.local', fullName: 'Chetan Kulkarni', role: 'Dept Head', department: 'QC' },
   { email: 'operator@demo.local', fullName: 'Omkar Patil', role: 'Operator', department: 'PROD' },
   { email: 'maintenance@demo.local', fullName: 'Manoj Iyer', role: 'Maintenance Engineer', department: 'ENG' },
 ];
+
+interface DemoActor {
+  userId: string;
+  fullName: string;
+  roleId: string;
+}
 
 function printCredentials(): void {
   console.log('');
@@ -165,11 +197,22 @@ async function seed(): Promise<void> {
     const roleModel = app.get<Model<RoleDocument>>(getModelToken(Role.name));
     const userModel = app.get<Model<UserDocument>>(getModelToken(User.name));
     const schemeModel = app.get<Model<NumberingSchemeDocument>>(getModelToken(NumberingScheme.name));
+    const documentModel = app.get<Model<DocumentEntityDocument>>(getModelToken(DocumentEntity.name));
+    const equipmentModel = app.get<Model<EquipmentDocument>>(getModelToken(Equipment.name));
+    const roomModel = app.get<Model<RoomDocument>>(getModelToken(Room.name));
+    const lotModel = app.get<Model<MaterialLotDocument>>(getModelToken(MaterialLot.name));
     const tenantService = app.get(TenantService);
     const departmentService = app.get(DepartmentService);
     const userAdminService = app.get(UserAdminService);
     const numberingService = app.get(NumberingService);
     const workflowService = app.get(WorkflowService);
+    const esignService = app.get(EsignService);
+    const documentsService = app.get(DocumentsService);
+    const equipmentService = app.get(EquipmentService);
+    const calibrationService = app.get(CalibrationService);
+    const roomService = app.get(RoomService);
+    const roomCleaningService = app.get(RoomCleaningService);
+    const materialLotService = app.get(MaterialLotService);
 
     // TenantService.provisionTenant() cannot take a caller-chosen _id, and the client needs this
     // exact id (see DEMO_TENANT_ID above) — so the tenant document is created directly and the
@@ -223,13 +266,18 @@ async function seed(): Promise<void> {
     console.log(`✓ departments: ${departmentsCreated} created`);
 
     const usersByEmail = new Map<string, string>();
+    // Reused below for sample business data — {userId, fullName, roleId} is exactly what
+    // DocumentActor/WorkflowActor/CalibrationActor/etc. need, so one map covers every seed call.
+    const demoActors = new Map<string, DemoActor>();
     let usersCreated = 0;
     for (const user of USERS) {
       const role = rolesByName.get(user.role);
       if (!role) throw new Error(`Unknown role "${user.role}"`);
+      const roleId = role._id.toString();
       const existing = await userModel.findOne({ tenantId: DEMO_TENANT_ID, email: user.email });
       if (existing) {
         usersByEmail.set(user.email, existing._id.toString());
+        demoActors.set(user.email, { userId: existing._id.toString(), fullName: user.fullName, roleId });
         continue;
       }
       const created = await userAdminService.createUser({
@@ -237,10 +285,11 @@ async function seed(): Promise<void> {
         email: user.email,
         fullName: user.fullName,
         password: DEMO_PASSWORD,
-        roleId: role._id.toString(),
+        roleId,
         departmentId: user.department ? departmentsByCode.get(user.department) : undefined,
       });
       usersByEmail.set(user.email, created.id);
+      demoActors.set(user.email, { userId: created.id, fullName: user.fullName, roleId });
       usersCreated += 1;
     }
     console.log(`✓ users: ${usersCreated} created`);
@@ -258,6 +307,9 @@ async function seed(): Promise<void> {
     });
     await departmentService.update(DEMO_TENANT_ID, departmentsByCode.get('PROD')!, {
       headUserId: usersByEmail.get('prod.head@demo.local')!,
+    });
+    await departmentService.update(DEMO_TENANT_ID, departmentsByCode.get('QC')!, {
+      headUserId: usersByEmail.get('qc.head@demo.local')!,
     });
 
     const existingSchemes = new Set(
@@ -296,6 +348,256 @@ async function seed(): Promise<void> {
       maintenanceRoleId: rolesByName.get('Maintenance Engineer')!._id.toString(),
     });
     console.log('✓ tenant settings (maintenance role wired for EQP-7)');
+
+    // ---------------------------------------------------------------------------------------
+    // Sample business data — makes a fresh database demo-able immediately, and specifically
+    // drives real Documents through the real PLT-4 approval workflow (via real e-signature
+    // challenges against DEMO_PASSWORD, never a bypass) so logging in as prod.head/qc.head or
+    // qa.head shows something real in "Pending approvals" without any manual setup.
+    // Idempotent per item, same convention as the rest of this file: skipped if a record with
+    // the same name/title already exists for this tenant.
+    // ---------------------------------------------------------------------------------------
+
+    const qaExec = demoActors.get('qa.exec@demo.local')!;
+    const prodHead = demoActors.get('prod.head@demo.local')!;
+    const qaHead = demoActors.get('qa.head@demo.local')!;
+
+    function dummyPdfFile(label: string): UploadedDocumentFile {
+      const buffer = Buffer.from(`%PDF-1.4\n% Seed document — ${label}\n`);
+      return { originalname: `${label.toLowerCase().replace(/\s+/g, '-')}.pdf`, mimetype: 'application/pdf', size: buffer.length, buffer };
+    }
+
+    // Approves whatever step a document version is currently pending at, via a REAL e-signature
+    // challenge (the approver's real, known DEMO_PASSWORD) — not a bypass. The real
+    // DocumentWorkflowListener (already wired into the live app) advances the version's state as
+    // a side effect, exactly as it would from a real HTTP request.
+    async function approveCurrentStep(versionId: string, approver: DemoActor): Promise<void> {
+      const instance = await workflowService.findInstanceForEntity(DEMO_TENANT_ID, DOCUMENT_VERSION_ENTITY_TYPE, versionId);
+      if (!instance) throw new Error(`Seed: no pending workflow instance for document version ${versionId}`);
+      const { signingToken } = await esignService.challenge(approver.userId, DEMO_TENANT_ID, approver.fullName, DEMO_PASSWORD);
+      await workflowService.actOnStep(DEMO_TENANT_ID, instance.id, approver, {
+        action: WorkflowAction.APPROVE,
+        signingToken,
+        entitySnapshot: { entityType: DOCUMENT_VERSION_ENTITY_TYPE, entityId: versionId },
+      });
+    }
+
+    interface DocumentSeed {
+      title: string;
+      docType: DocumentType;
+      departmentCode: string;
+      // How far through the approval flow to drive it — gives every pending-approval state a
+      // real example: an untouched draft, one pending each workflow step, and one fully Effective.
+      stage: 'draft' | 'pending_review' | 'pending_approval' | 'effective';
+      distributeToDepartmentCode?: string;
+    }
+
+    const DOCUMENT_SEEDS: DocumentSeed[] = [
+      { title: 'Gowning Procedure', docType: DocumentType.SOP, departmentCode: 'QA', stage: 'pending_review' },
+      { title: 'Equipment Cleaning SOP', docType: DocumentType.SOP, departmentCode: 'QC', stage: 'pending_approval' },
+      // Distributed to Production once Effective — auto-generates real TRN-1 TrainingAssignments
+      // for prod.head/operator via the same DocumentTrainingTargetChangedEvent a real edit fires.
+      { title: 'Change Control Policy', docType: DocumentType.POLICY, departmentCode: 'QA', stage: 'effective', distributeToDepartmentCode: 'PROD' },
+      { title: 'Deviation Handling Procedure', docType: DocumentType.SOP, departmentCode: 'PROD', stage: 'draft' },
+    ];
+
+    let documentsCreated = 0;
+    for (const seedItem of DOCUMENT_SEEDS) {
+      const existing = await documentModel.findOne({ tenantId: DEMO_TENANT_ID, title: seedItem.title }).lean();
+      if (existing) continue;
+
+      const document = await documentsService.createDocument(
+        DEMO_TENANT_ID,
+        qaExec,
+        {
+          title: seedItem.title,
+          docType: seedItem.docType,
+          departmentId: departmentsByCode.get(seedItem.departmentCode)!,
+          reviewFrequencyMonths: 12,
+        },
+        dummyPdfFile(seedItem.title),
+      );
+
+      if (seedItem.stage !== 'draft') {
+        await documentsService.submitVersion(DEMO_TENANT_ID, qaExec, document.latestVersion.id);
+      }
+      if (seedItem.stage === 'pending_approval' || seedItem.stage === 'effective') {
+        await approveCurrentStep(document.latestVersion.id, prodHead);
+      }
+      if (seedItem.stage === 'effective') {
+        await approveCurrentStep(document.latestVersion.id, qaHead);
+      }
+      if (seedItem.distributeToDepartmentCode) {
+        await documentsService.updateDistribution(DEMO_TENANT_ID, document.id, {
+          roleIds: [],
+          departmentIds: [departmentsByCode.get(seedItem.distributeToDepartmentCode)!],
+        });
+      }
+      documentsCreated += 1;
+    }
+    console.log(`✓ sample documents (approval-flow demo): ${documentsCreated} created`);
+
+    interface EquipmentSeed {
+      name: string;
+      location: string;
+      departmentCode: string;
+      isGmpCritical: boolean;
+      calibration?: {
+        frequencyMonths: number;
+        parameters: string;
+        toleranceClass: string;
+        nextDueDate: string;
+        agencyType: 'internal' | 'external';
+        agencyName?: string;
+      };
+    }
+
+    const EQUIPMENT_SEEDS: EquipmentSeed[] = [
+      {
+        name: 'Autoclave AC-1',
+        location: 'Utility Room',
+        departmentCode: 'ENG',
+        isGmpCritical: true,
+        // Deliberately overdue — exercises the QA-dashboard overdue-calibration widget.
+        calibration: { frequencyMonths: 12, parameters: 'Temperature, Pressure', toleranceClass: 'Class A', nextDueDate: '2026-06-01', agencyType: 'internal' },
+      },
+      {
+        name: 'pH Meter PM-3',
+        location: 'QC Lab — Bench 3',
+        departmentCode: 'QC',
+        isGmpCritical: false,
+        calibration: {
+          frequencyMonths: 6,
+          parameters: 'pH 4/7/10 buffer verification',
+          toleranceClass: 'Class B',
+          nextDueDate: '2026-08-05',
+          agencyType: 'external',
+          agencyName: 'Metro Calibration Services',
+        },
+      },
+      {
+        name: 'HPLC System HP-1',
+        location: 'QC Lab — Instrument Room',
+        departmentCode: 'QC',
+        isGmpCritical: true,
+        calibration: {
+          frequencyMonths: 12,
+          parameters: 'Flow rate, wavelength accuracy',
+          toleranceClass: 'Class A',
+          nextDueDate: '2027-06-01',
+          agencyType: 'external',
+          agencyName: 'Precision Cal Labs',
+        },
+      },
+      // No calibration schedule at all — exercises the NOT_SCHEDULED status-card stub.
+      { name: 'Air Compressor CP-2', location: 'Production Floor', departmentCode: 'PROD', isGmpCritical: false },
+    ];
+
+    let equipmentCreated = 0;
+    for (const seedItem of EQUIPMENT_SEEDS) {
+      const existing = await equipmentModel.findOne({ tenantId: DEMO_TENANT_ID, name: seedItem.name }).lean();
+      if (existing) continue;
+
+      const equipment = await equipmentService.create(DEMO_TENANT_ID, {
+        name: seedItem.name,
+        location: seedItem.location,
+        departmentId: departmentsByCode.get(seedItem.departmentCode)!,
+        isGmpCritical: seedItem.isGmpCritical,
+      });
+
+      if (seedItem.calibration) {
+        const schedule: CreateCalibrationScheduleRequest = {
+          frequencyMonths: seedItem.calibration.frequencyMonths,
+          parameters: seedItem.calibration.parameters,
+          toleranceClass: seedItem.calibration.toleranceClass,
+          agencyType: seedItem.calibration.agencyType,
+          agencyName: seedItem.calibration.agencyName,
+          nextDueDate: seedItem.calibration.nextDueDate,
+        };
+        await calibrationService.upsertSchedule(DEMO_TENANT_ID, equipment.id, qaExec, schedule);
+      }
+      equipmentCreated += 1;
+    }
+    console.log(`✓ sample equipment: ${equipmentCreated} created`);
+
+    interface RoomSeed {
+      name: string;
+      departmentCode: string;
+      classification: RoomClassification;
+      cleaning: UpsertRoomCleaningScheduleRequest;
+    }
+
+    const ROOM_SEEDS: RoomSeed[] = [
+      {
+        name: 'QC Laboratory',
+        departmentCode: 'QC',
+        classification: RoomClassification.CONTROLLED,
+        cleaning: { routineFrequency: RoomCleaningFrequency.DAILY, fullCleaningIntervalDays: 30, nextRoutineDueDate: '2026-08-01', nextFullDueDate: '2026-08-20' },
+      },
+      {
+        name: 'Production Floor A',
+        departmentCode: 'PROD',
+        classification: RoomClassification.GENERAL,
+        // Deliberately overdue on both dates — exercises the QA-dashboard overdue-cleaning widget.
+        cleaning: { routineFrequency: RoomCleaningFrequency.PER_SHIFT, fullCleaningIntervalDays: 14, nextRoutineDueDate: '2026-06-01', nextFullDueDate: '2026-06-15' },
+      },
+    ];
+
+    let roomsCreated = 0;
+    for (const seedItem of ROOM_SEEDS) {
+      const existing = await roomModel.findOne({ tenantId: DEMO_TENANT_ID, name: seedItem.name }).lean();
+      if (existing) continue;
+
+      const room = await roomService.create(DEMO_TENANT_ID, {
+        name: seedItem.name,
+        classification: seedItem.classification,
+        departmentId: departmentsByCode.get(seedItem.departmentCode)!,
+      });
+      const cleaningActor: RoomCleaningActor = { userId: qaExec.userId, fullName: qaExec.fullName };
+      await roomCleaningService.upsertSchedule(DEMO_TENANT_ID, room.id, cleaningActor, seedItem.cleaning);
+      roomsCreated += 1;
+    }
+    console.log(`✓ sample rooms: ${roomsCreated} created`);
+
+    interface MaterialLotSeed {
+      materialName: string;
+      manufacturer?: string;
+      receivedDate: string;
+      finalStatus: MaterialLotStatus;
+      note?: string;
+    }
+
+    const MATERIAL_LOT_SEEDS: MaterialLotSeed[] = [
+      { materialName: 'Lactose Monohydrate', manufacturer: 'DFE Pharma', receivedDate: '2026-07-01', finalStatus: MaterialLotStatus.QUARANTINE },
+      { materialName: 'Magnesium Stearate', manufacturer: 'Peter Greven', receivedDate: '2026-06-20', finalStatus: MaterialLotStatus.UNDER_TEST, note: 'Sent for QC testing' },
+      { materialName: 'Microcrystalline Cellulose', manufacturer: 'FMC BioPolymer', receivedDate: '2026-06-10', finalStatus: MaterialLotStatus.APPROVED, note: 'Passed all QC tests' },
+      { materialName: 'Talc', manufacturer: 'Imerys', receivedDate: '2026-06-05', finalStatus: MaterialLotStatus.REJECTED, note: 'Failed heavy metals test' },
+    ];
+
+    let materialLotsCreated = 0;
+    for (const seedItem of MATERIAL_LOT_SEEDS) {
+      const existing = await lotModel.findOne({ tenantId: DEMO_TENANT_ID, materialName: seedItem.materialName }).lean();
+      if (existing) continue;
+
+      const createDto: CreateMaterialLotRequest = {
+        materialName: seedItem.materialName,
+        manufacturer: seedItem.manufacturer,
+        receivedDate: seedItem.receivedDate,
+      };
+      const lot = await materialLotService.create(DEMO_TENANT_ID, createDto);
+
+      const signingContext: SigningContext = { userId: qaExec.userId, tenantId: DEMO_TENANT_ID, fullName: qaExec.fullName };
+      if (seedItem.finalStatus === MaterialLotStatus.UNDER_TEST) {
+        await materialLotService.dispositionStatus(DEMO_TENANT_ID, lot.id, signingContext, MaterialLotStatus.UNDER_TEST, seedItem.note);
+      } else if (seedItem.finalStatus === MaterialLotStatus.APPROVED) {
+        await materialLotService.dispositionStatus(DEMO_TENANT_ID, lot.id, signingContext, MaterialLotStatus.UNDER_TEST, 'Sent for QC testing');
+        await materialLotService.dispositionStatus(DEMO_TENANT_ID, lot.id, signingContext, MaterialLotStatus.APPROVED, seedItem.note);
+      } else if (seedItem.finalStatus === MaterialLotStatus.REJECTED) {
+        await materialLotService.dispositionStatus(DEMO_TENANT_ID, lot.id, signingContext, MaterialLotStatus.REJECTED, seedItem.note);
+      }
+      materialLotsCreated += 1;
+    }
+    console.log(`✓ sample material lots: ${materialLotsCreated} created`);
 
     console.log('');
     console.log('Seed complete.');

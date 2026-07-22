@@ -1,3 +1,4 @@
+import type { PermissionKey } from '@pharmaqms/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
@@ -18,7 +19,7 @@ vi.mock('../../../lib/training-api', () => ({ fetchOverdueTraining }));
 const { fetchReviewDue } = vi.hoisted(() => ({ fetchReviewDue: vi.fn() }));
 vi.mock('../../../lib/documents-api', () => ({ fetchReviewDue }));
 
-function renderPage(permissions: string[]) {
+function renderPage(permissions: PermissionKey[]) {
   localStorage.clear();
   localStorage.setItem('pharmaqms.accessToken', signFakeAccessTokenForTest({ permissions }));
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });

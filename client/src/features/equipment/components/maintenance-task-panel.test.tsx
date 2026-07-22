@@ -1,3 +1,4 @@
+import type { PermissionKey } from '@pharmaqms/shared';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -16,7 +17,7 @@ vi.mock('../../../lib/equipment-api', () => ({ fetchMaintenanceTasksForEquipment
 const { challengeSignature } = vi.hoisted(() => ({ challengeSignature: vi.fn() }));
 vi.mock('../../../lib/esign-api', () => ({ challengeSignature }));
 
-function renderPanel(permissions: string[]) {
+function renderPanel(permissions: PermissionKey[]) {
   localStorage.clear();
   localStorage.setItem('pharmaqms.accessToken', signFakeAccessTokenForTest({ permissions }));
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
